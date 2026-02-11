@@ -1,0 +1,7 @@
+1. start backend:
+    cd into backend
+    execute "php artisan serve"
+
+2. start frontend
+    cd into frontend
+    npm start
