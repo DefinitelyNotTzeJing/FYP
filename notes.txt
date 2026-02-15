@@ -5,3 +5,32 @@
 2. start frontend
     cd into frontend
     npm start
+
+3. create db tables
+    cd into backend
+    php artisan migrate
+
+4. start facial recognition
+    cd into backend/face/insightface
+    .\venv\Scripts\Activate.ps1
+    python complete_face_system_cam.py
+
+    C:\Users\jinz1\Desktop\FYP\FYP2\FYP\backend\face\insightface\complete_face_system_cam.py
+    C:\\Users\\jinz1\\Desktop\\FYP\\FYP2\\FYP\\backend\\face\\insightface\\complete_face
+
+    Create Admin User
+    $admin = User::create([
+        'email' => 'admin@bookstore.com',
+        'password' => Hash::make('password'),
+        'is_admin' => true,
+    ]);
+
+    UserProfile::create([
+        'user_id' => $admin->user_id,
+        'username' => 'admin',
+        'date_of_birth' => '1990-01-01',
+        'gender' => 'M',
+        'age' => 34,
+        'phone' => '0123456789',
+        'address' => '123 Admin Street, Kuala Lumpur',
+    ]);
