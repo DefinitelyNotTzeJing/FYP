@@ -14,16 +14,18 @@ class UserSeeder extends Seeder
         // Create Admin User
         $admin = User::create([
             'email' => 'admin@bookstore.com',
+            'username' => 'admin',
             'password' => Hash::make('password'),
-            'is_admin' => true,
         ]);
+
+        // Explicitly set admin status (not through mass assignment for security)
+        $admin->is_admin = true;
+        $admin->save();
 
         UserProfile::create([
             'user_id' => $admin->user_id,
-            'username' => 'admin',
             'date_of_birth' => '1990-01-01',
             'gender' => 'M',
-            'age' => 34,
             'phone' => '0123456789',
             'address' => '123 Admin Street, Kuala Lumpur',
         ]);
@@ -35,37 +37,32 @@ class UserSeeder extends Seeder
                 'username' => 'john_doe',
                 'date_of_birth' => '1995-05-15',
                 'gender' => 'M',
-                'age' => 29,
             ],
             [
                 'email' => 'jane@example.com',
                 'username' => 'jane_smith',
                 'date_of_birth' => '1998-08-20',
                 'gender' => 'F',
-                'age' => 26,
             ],
             [
                 'email' => 'alex@example.com',
                 'username' => 'alex_wong',
                 'date_of_birth' => '1992-12-10',
                 'gender' => 'M',
-                'age' => 32,
             ],
         ];
 
         foreach ($users as $userData) {
             $user = User::create([
                 'email' => $userData['email'],
+                'username' => $userData['username'],
                 'password' => Hash::make('password'),
-                'is_admin' => false,
             ]);
 
             UserProfile::create([
                 'user_id' => $user->user_id,
-                'username' => $userData['username'],
                 'date_of_birth' => $userData['date_of_birth'],
                 'gender' => $userData['gender'],
-                'age' => $userData['age'],
                 'phone' => '012345' . rand(1000, 9999),
                 'address' => rand(1, 999) . ' Street, Shah Alam',
             ]);

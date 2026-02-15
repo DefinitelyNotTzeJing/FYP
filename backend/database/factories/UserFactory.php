@@ -24,21 +24,36 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
+            'username' => fake()->unique()->userName(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }
 
     /**
-     * Indicate that the model's email address should be unverified.
+     * Indicate that the user is an admin.
      */
-    public function unverified(): static
+    public function admin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            // This will be set explicitly after creation for security
         ]);
+    }
+
+    /**
+     * Configure the model factory after creating the model.
+     */
+    public function configure(): static
+    {
+        return $this->afterCreating(function ($user) {
+            // Auto-create profile for each user
+            $user->profile()->create([
+                'date_of_birth' => fake()->dateTimeBetween('-60 years', '-18 years')->format('Y-m-d'),
+                'gender' => fake()->randomElement(['M', 'F', 'Other']),
+                'phone' => fake()->phoneNumber(),
+                'address' => fake()->address(),
+            ]);
+        });
     }
 }

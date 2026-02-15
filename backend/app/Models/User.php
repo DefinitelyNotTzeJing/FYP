@@ -15,15 +15,14 @@ class User extends Authenticatable
 
     protected $fillable = [
         'email',
+        'username',
         'password',
-        'is_admin',
-        'face_embedding',
-        'face_registered_at',
     ];
 
     protected $hidden = [
         'password',
         'remember_token',
+        'face_embedding',
     ];
 
     protected $casts = [

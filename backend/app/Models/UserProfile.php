@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,11 +16,9 @@ class UserProfile extends Model
 
     protected $fillable = [
         'user_id',
-        'username',
         'profile_image_url',
         'date_of_birth',
         'gender',
-        'age',
         'payment_method',
         'address',
         'phone',
@@ -27,8 +26,20 @@ class UserProfile extends Model
 
     protected $casts = [
         'date_of_birth' => 'date',
-        'age' => 'integer',
     ];
+
+    // Append age to JSON responses
+    protected $appends = ['age'];
+
+    // Auto-calculate age from date_of_birth
+    protected function age(): Attribute
+    {
+        return Attribute::make(
+            get: fn() => $this->date_of_birth 
+                ? $this->date_of_birth->age 
+                : null
+        );
+    }
 
     // Relationship
     public function user()
