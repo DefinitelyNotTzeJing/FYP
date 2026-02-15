@@ -137,5 +137,34 @@ class BookSeeder extends Seeder
                 'is_featured' => $bookData['is_featured'],
             ]);
         }
+        // ===== PART 2: Use Factory to create random books =====
+        
+        // Get all existing authors and categories
+        $authors = Author::all();
+        $categories = Category::all();
+
+        // Create 50 random books using existing authors and categories
+        Book::factory(50)->create()->each(function ($book) use ($authors, $categories) {
+            $book->update([
+                'author_id' => $authors->random()->author_id,
+                'category_id' => $categories->random()->category_id,
+            ]);
+        });
+
+        // Create 10 featured books
+        Book::factory(10)->featured()->create()->each(function ($book) use ($authors, $categories) {
+            $book->update([
+                'author_id' => $authors->random()->author_id,
+                'category_id' => $categories->random()->category_id,
+            ]);
+        });
+
+        // Create 5 highly-rated featured books
+        Book::factory(5)->featured()->highlyRated()->create()->each(function ($book) use ($authors, $categories) {
+            $book->update([
+                'author_id' => $authors->random()->author_id,
+                'category_id' => $categories->random()->category_id,
+            ]);
+        });
     }
 }

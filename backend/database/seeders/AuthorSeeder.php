@@ -65,5 +65,6 @@ class AuthorSeeder extends Seeder
         foreach ($authors as $author) {
             Author::create($author);
         }
+        Author::factory(20)->create();
     }
 }

@@ -67,5 +67,6 @@ class UserSeeder extends Seeder
                 'address' => rand(1, 999) . ' Street, Shah Alam',
             ]);
         }
+        User::factory(30)->create();
     }
 }
