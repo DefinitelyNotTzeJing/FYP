@@ -14,8 +14,11 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('password');
             $table->boolean('is_admin')->default(false);
+
+            // Face recognition fields
             $table->json('face_embedding')->nullable();
             $table->timestamp('face_registered_at')->nullable();
+            
             $table->rememberToken();
             $table->timestamps();
 

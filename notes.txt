@@ -13,24 +13,20 @@
 4. start facial recognition
     cd into backend/face/insightface
     .\venv\Scripts\Activate.ps1
-    python complete_face_system_cam.py
+    python face_register_and_compare_json.py
+    python test1.py
 
-    C:\Users\jinz1\Desktop\FYP\FYP2\FYP\backend\face\insightface\complete_face_system_cam.py
-    C:\\Users\\jinz1\\Desktop\\FYP\\FYP2\\FYP\\backend\\face\\insightface\\complete_face
+5. edit routes in "backend\routes\api.php"
 
-    Create Admin User
-    $admin = User::create([
-        'email' => 'admin@bookstore.com',
-        'password' => Hash::make('password'),
-        'is_admin' => true,
-    ]);
+6. admin account information: 
+    admin username: admin
+    admin password: admin
+    admin email: admin@bookstore.com
 
-    UserProfile::create([
-        'user_id' => $admin->user_id,
-        'username' => 'admin',
-        'date_of_birth' => '1990-01-01',
-        'gender' => 'M',
-        'age' => 34,
-        'phone' => '0123456789',
-        'address' => '123 Admin Street, Kuala Lumpur',
-    ]);
+7. if database goes boom:
+    php artisan migrate:fresh --seed
+
+To do list
+1. relearn api and middleware from laravel tutorial
+2. do frontend
+    - login, register, edit profile, page routing, 
