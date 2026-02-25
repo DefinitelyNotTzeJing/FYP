@@ -8,7 +8,7 @@ import random
 
 # Initialize
 app = FaceAnalysis(providers=['CPUExecutionProvider'])
-app.prepare(ctx_id=0, det_size=(640, 640))
+app.prepare(ctx_id=0, det_size=(320, 320))
 
 
 def get_largest_face(faces):
@@ -39,7 +39,10 @@ def register_face():
     cv2.resizeWindow(window_name, 640, 480)  # window size
 
     """Capture face and save embedding"""
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 30)
     print("📷 Registration Mode - Press SPACE to capture")
     
     embedding_json = None
@@ -246,7 +249,10 @@ def verify_face_hybrid(stored_embedding_json):
     """
     stored_embedding = np.array(json.loads(stored_embedding_json))
     
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 30)
     print("\n" + "="*70)
     print("🔐 HYBRID LIVENESS VERIFICATION")
     print("="*70)

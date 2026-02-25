@@ -13,7 +13,6 @@
 4. start facial recognition
     cd into backend/face/insightface
     .\venv\Scripts\Activate.ps1
-    python face_register_and_compare_json.py
     python test1.py
 
 5. edit routes in "backend\routes\api.php"

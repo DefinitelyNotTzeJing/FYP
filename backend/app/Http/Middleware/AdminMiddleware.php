@@ -7,14 +7,11 @@ use Illuminate\Http\Request;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     */
     public function handle(Request $request, Closure $next)
     {
-        if (!$request->user() || !$request->user()->isAdmin()) {
+        if (!$request->user() || !$request->user()->is_admin) {
             return response()->json([
-                'message' => 'Unauthorized. Admin access required.'
+                'error' => 'Unauthorized. Admin access required.'
             ], 403);
         }
 
