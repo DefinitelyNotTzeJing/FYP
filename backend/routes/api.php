@@ -2,15 +2,11 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookController;
 use App\Http\Controllers\Api\OrderController;
-
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
+use App\Http\Controllers\Api\FaceRecognitionController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -22,11 +18,22 @@ Route::get('/books/search', [BookController::class, 'search']);
 Route::get('/books/category/{category}', [BookController::class, 'byCategory']);
 Route::get('/books/{id}', [BookController::class, 'show']);
 
+// Face Recognition Routes
+Route::get('/face/health', [FaceRecognitionController::class, 'healthCheck']);
+Route::post('/face/verify', [FaceRecognitionController::class, 'verifyFace']);
+
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {
     // Auth
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::put('/user', [AuthController::class, 'updateProfile']);
+    Route::put('/password', [AuthController::class, 'changePassword']);
+
+    // Face Recognition - Protected
+    Route::post('/face/register', [FaceRecognitionController::class, 'registerFace']);
+    Route::delete('/face/remove', [FaceRecognitionController::class, 'removeFace']);
+    Route::get('/face/status', [FaceRecognitionController::class, 'checkFaceStatus']);
 
     // Orders
     Route::get('/orders', [OrderController::class, 'index']);

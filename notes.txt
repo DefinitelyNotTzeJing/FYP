@@ -13,7 +13,7 @@
 4. start facial recognition
     cd into backend/face/insightface
     .\venv\Scripts\Activate.ps1
-    python complete_face_system_cam.py
+    python test1.py
 
     C:\Users\jinz1\Desktop\FYP\FYP2\FYP\backend\face\insightface\complete_face_system_cam.py
     C:\\Users\\jinz1\\Desktop\\FYP\\FYP2\\FYP\\backend\\face\\insightface\\complete_face
