@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\FaceRecognitionController;
+use App\Http\Controllers\Api\UserProfileController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -29,6 +30,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user', [AuthController::class, 'updateProfile']);
     Route::put('/password', [AuthController::class, 'changePassword']);
+
+    // User Profile
+    Route::get('/profile', [UserProfileController::class, 'show']);     // Get current user's profile
+    Route::put('/profile', [UserProfileController::class, 'update']);   // Update current user's profile
 
     // Face Recognition - Protected
     Route::post('/face/register', [FaceRecognitionController::class, 'registerFace']);
