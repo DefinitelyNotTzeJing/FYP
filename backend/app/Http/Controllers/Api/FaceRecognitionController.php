@@ -68,8 +68,8 @@ class FaceRecognitionController extends Controller
 
             $data = $response->json();
             
-            // Store embedding in database
-            $user->face_embedding = json_decode($data['embedding']);
+            // Store embedding in database (already a JSON string from Python)
+            $user->face_embedding = $data['embedding'];
             $user->face_registered_at = now();
             $user->save();
 
@@ -96,37 +96,123 @@ class FaceRecognitionController extends Controller
      * Verify user's face for login
      * Does NOT require authentication (this is the login)
      */
+    // public function verifyFace(Request $request)
+    // {
+    //     $request->validate([
+    //         'image' => 'required|string', // Base64 image from webcam
+    //         'email' => 'required|email',
+    //     ]);
+
+    //     try {
+    //         // Find user by email
+    //         $user = User::where('email', $request->email)->first();
+
+    //         if (!$user) {
+    //             return response()->json(['error' => 'User not found'], 404);
+    //         }
+
+    //         if (!$user->face_embedding) {
+    //             return response()->json([
+    //                 'error' => 'Face not registered',
+    //                 'message' => 'This user has not registered their face yet'
+    //             ], 400);
+    //         }
+
+    //         // Send to Python API for verification
+    //         $response = Http::timeout(30)->post($this->pythonApiUrl . '/verify-face', [
+    //             'image' => $request->image,
+    //             'stored_embedding' => $user->face_embedding,
+    //             'threshold' => 0.6,
+    //         ]);
+
+    //         if (!$response->successful()) {
+    //             $error = $response->json()['error'] ?? 'Face verification failed';
+    //             return response()->json(['error' => $error], 400);
+    //         }
+
+    //         $data = $response->json();
+
+    //         if ($data['match']) {
+    //             // Face matched! Create authentication token
+    //             $token = $user->createToken('face-auth')->plainTextToken;
+
+    //             return response()->json([
+    //                 'success' => true,
+    //                 'message' => 'Login successful',
+    //                 'user' => $user->load('profile'),
+    //                 'token' => $token,
+    //                 'similarity' => $data['similarity'],
+    //             ]);
+    //         } else {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'error' => 'Face verification failed',
+    //                 'message' => 'The face does not match',
+    //                 'similarity' => $data['similarity'],
+    //             ], 401);
+    //         }
+
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'error' => 'Failed to verify face',
+    //             'details' => $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
     public function verifyFace(Request $request)
     {
-        $request->validate([
-            'image' => 'required|string', // Base64 image from webcam
-            'email' => 'required|email',
+        \Log::info('=== VERIFY FACE REQUEST START ===');
+        \Log::info('Request data:', [
+            'email' => $request->email,
+            'has_image' => !empty($request->image),
+            'image_length' => strlen($request->image ?? ''),
         ]);
 
         try {
+            $request->validate([
+                'image' => 'required|string',
+                'email' => 'required|email',
+            ]);
+
+            \Log::info('Validation passed');
+
             // Find user by email
             $user = User::where('email', $request->email)->first();
 
             if (!$user) {
+                \Log::error('User not found:', ['email' => $request->email]);
                 return response()->json(['error' => 'User not found'], 404);
             }
 
+            \Log::info('User found:', ['user_id' => $user->user_id]);
+
             if (!$user->face_embedding) {
+                \Log::error('Face not registered for user:', ['user_id' => $user->user_id]);
                 return response()->json([
                     'error' => 'Face not registered',
                     'message' => 'This user has not registered their face yet'
                 ], 400);
             }
 
+            \Log::info('Face embedding exists, length:', ['length' => strlen($user->face_embedding)]);
+
             // Send to Python API for verification
+            \Log::info('Calling Python API...');
+            
             $response = Http::timeout(30)->post($this->pythonApiUrl . '/verify-face', [
                 'image' => $request->image,
-                'stored_embedding' => json_encode($user->face_embedding),
+                'stored_embedding' => $user->face_embedding,
                 'threshold' => 0.6,
+            ]);
+
+            \Log::info('Python API response:', [
+                'status' => $response->status(),
+                'body' => $response->body(),
             ]);
 
             if (!$response->successful()) {
                 $error = $response->json()['error'] ?? 'Face verification failed';
+                \Log::error('Python API error:', ['error' => $error]);
                 return response()->json(['error' => $error], 400);
             }
 
@@ -136,6 +222,8 @@ class FaceRecognitionController extends Controller
                 // Face matched! Create authentication token
                 $token = $user->createToken('face-auth')->plainTextToken;
 
+                \Log::info('Face match successful!');
+
                 return response()->json([
                     'success' => true,
                     'message' => 'Login successful',
@@ -144,6 +232,8 @@ class FaceRecognitionController extends Controller
                     'similarity' => $data['similarity'],
                 ]);
             } else {
+                \Log::info('Face match failed:', ['similarity' => $data['similarity']]);
+                
                 return response()->json([
                     'success' => false,
                     'error' => 'Face verification failed',
@@ -153,6 +243,13 @@ class FaceRecognitionController extends Controller
             }
 
         } catch (\Exception $e) {
+            \Log::error('Exception in verifyFace:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
             return response()->json([
                 'error' => 'Failed to verify face',
                 'details' => $e->getMessage()

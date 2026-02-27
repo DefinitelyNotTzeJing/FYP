@@ -153,7 +153,15 @@ def verify_face():
         live_embedding = faces[0].embedding
         
         # Convert stored embedding from JSON to numpy array
-        stored_embedding_list = json.loads(stored_embedding_json)
+        if isinstance(stored_embedding_json, str):
+            # It's a JSON string, parse it
+            stored_embedding_list = json.loads(stored_embedding_json)
+        elif isinstance(stored_embedding_json, list):
+            # It's already a list
+            stored_embedding_list = stored_embedding_json
+        else:
+            return jsonify({'error': 'Invalid stored_embedding format'}), 400
+
         stored_embedding = np.array(stored_embedding_list)
         
         # Calculate similarity (cosine similarity)
@@ -161,7 +169,7 @@ def verify_face():
             np.linalg.norm(live_embedding) * np.linalg.norm(stored_embedding)
         )
         
-        match = similarity >= threshold
+        match = bool(similarity >= threshold)
         
         print(f"📊 Similarity: {similarity:.4f} | Threshold: {threshold} | Match: {match}")
         

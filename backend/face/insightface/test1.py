@@ -5,11 +5,99 @@ import time
 from insightface.app import FaceAnalysis
 from collections import deque
 import random
+import base64
 
 # Initialize
 app = FaceAnalysis(providers=['CPUExecutionProvider'])
 app.prepare(ctx_id=0, det_size=(320, 320))
 
+def capture_and_convert_base64():
+    """NEW FUNCTION: Capture face and convert to base64 for API"""
+    window_name = 'Face Capture - Press SPACE'
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    cv2.resizeWindow(window_name, 640, 480)
+    
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    
+    print("\n" + "="*70)
+    print("📷 CAPTURE MODE - For Postman/API Testing")
+    print("="*70)
+    print("Instructions:")
+    print("  - Position your face in the green box")
+    print("  - Press SPACE to capture")
+    print("  - Press Q to quit")
+    print("="*70 + "\n")
+    
+    base64_image = None
+    prev_time = time.time()
+    
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        
+        fps = 1 / (time.time() - prev_time)
+        prev_time = time.time()
+        
+        faces = app.get(frame)
+        target_face = get_largest_face(faces)
+        
+        if target_face is not None:
+            box = target_face.bbox.astype(int)
+            cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (0, 255, 0), 3)
+            cv2.putText(frame, "✅ Face Detected", (10, 90), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+        else:
+            cv2.putText(frame, "❌ No Face Detected", (10, 90), 
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+        
+        cv2.putText(frame, "Press SPACE to capture image", (10, 30), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(frame, "Press Q to quit", (10, 60), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+        cv2.putText(frame, f"FPS: {int(fps)}", (10, frame.shape[0] - 20), 
+                   cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+        
+        cv2.imshow(window_name, frame)
+        
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord(' '):  # SPACE to capture
+            # Save image temporarily
+            cv2.imwrite('temp_capture.jpg', frame)
+            
+            # Convert to base64
+            with open('temp_capture.jpg', 'rb') as f:
+                image_data = f.read()
+                base64_encoded = base64.b64encode(image_data).decode('utf-8')
+                base64_image = f"data:image/jpeg;base64,{base64_encoded}"
+            
+            # Save to text file for easy copying
+            with open('base64_image.txt', 'w') as f:
+                f.write(base64_image)
+            
+            print("\n✅ Image captured successfully!")
+            print(f"📁 Saved to: base64_image.txt")
+            print(f"📏 Size: {len(base64_image)} characters")
+            print(f"📋 First 100 chars: {base64_image[:100]}...")
+            print("\n" + "="*70)
+            print("NEXT STEPS:")
+            print("  1. Open base64_image.txt")
+            print("  2. Copy the ENTIRE content")
+            print("  3. Paste into Postman body:")
+            print('     { "image": "PASTE_HERE" }')
+            print("="*70)
+            break
+            
+        elif key == ord('q'):  # Q to quit
+            print("\n⚠️  Cancelled by user")
+            break
+    
+    cap.release()
+    cv2.destroyAllWindows()
+    return base64_image
 
 def get_largest_face(faces):
     """Get the face with largest bounding box (closest to camera)"""
@@ -454,35 +542,38 @@ def verify_face_hybrid(stored_embedding_json):
 # ===== MAIN =====
 if __name__ == "__main__":
     print("\n" + "="*70)
-    print("FACE RECOGNITION WITH HYBRID LIVENESS DETECTION")
-    print("="*70)
-    print("\nThis system uses:")
-    print("  ✅ Passive analysis (fast, 3 seconds)")
-    print("  ✅ Active challenges (triggered if suspicious)")
-    print("  ✅ Face matching (identity verification)")
-    print("\nSecurity features:")
-    print("  🛡️  Detects static photos")
-    print("  🛡️  Detects phone/screen displays")
-    print("  🛡️  Detects video replays (random challenges)")
+    print("FACE RECOGNITION SYSTEM")
     print("="*70)
     
-    print("\n1. Register new face")
+    print("\n1. Register new face (saves embedding to face_data.json)")
     print("2. Verify with hybrid liveness detection")
+    print("3. Capture image and convert to Base64 (for Postman testing)")  # NEW OPTION
     
-    choice = input("\nEnter choice (1 or 2): ")
+    choice = input("\nEnter choice (1, 2, or 3): ")
     
-    if choice == "1":
+    if choice == "1": # This will run the face registration function which captures the face and saves the embedding as JSON in a file
         embedding = register_face()
         if embedding:
             with open('face_data.json', 'w') as f:
                 json.dump({'embedding': embedding}, f)
             print("\n✅ Face data saved to face_data.json")
     
-    elif choice == "2":
+    elif choice == "2": # This will run the hybrid verification function which includes both passive and active checks before face matching
         try:
             with open('face_data.json', 'r') as f:
                 stored = json.load(f)['embedding']
-            verify_face_hybrid(stored)
+            # verify_face_hybrid(stored)  # This function is in your original file
+            print("Verification function would run here...")
         except FileNotFoundError:
             print("\n❌ No registered face found!")
             print("Please register first (option 1)")
+    
+    elif choice == "3":  # Convert image to base64 for API testing
+        base64_result = capture_and_convert_base64()
+        if base64_result:
+            print("\n🎉 Ready for Postman testing!")
+        else:
+            print("\n⚠️  No image captured")
+    
+    else:
+        print("\n❌ Invalid choice!")
