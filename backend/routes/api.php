@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\BookController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\FaceRecognitionController;
 use App\Http\Controllers\Api\UserProfileController;
+use App\Http\Controllers\Api\BookReviewController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,6 +19,9 @@ Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/search', [BookController::class, 'search']);
 Route::get('/books/category/{category}', [BookController::class, 'byCategory']);
 Route::get('/books/{id}', [BookController::class, 'show']);
+
+// Book Reviews - public access
+Route::get('/books/{bookId}/reviews', [BookReviewController::class, 'getBookReviews']);
 
 // Face Recognition Routes
 Route::get('/face/health', [FaceRecognitionController::class, 'healthCheck']);
@@ -34,6 +38,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'show']);     // Get current user's profile
     Route::put('/profile', [UserProfileController::class, 'update']);   // Update current user's profile
+
+    // Book Rating and Reviews
+    Route::post('/book-reviews', [BookReviewController::class, 'store']);                       // Submit a rating and review for a book
+    Route::put('/book-reviews/{bookId}', [BookReviewController::class, 'update']);              // Update user's own rating/review
+    Route::delete('/book-reviews/{bookId}', [BookReviewController::class, 'destroy']);          // Delete user's own rating/review
+    Route::get('/books/{bookId}/my-review', [BookReviewController::class, 'getUserReview']);    // Get current user's rating/review for a specific book
+    Route::get('/my-reviews', [BookReviewController::class, 'getMyReviews']);                   // Get all ratings/reviews submitted by current user
 
     // Face Recognition - Protected
     Route::post('/face/register', [FaceRecognitionController::class, 'registerFace']);
