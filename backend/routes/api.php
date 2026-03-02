@@ -9,6 +9,9 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\FaceRecognitionController;
 use App\Http\Controllers\Api\UserProfileController;
 use App\Http\Controllers\Api\BookReviewController;
+use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\PaymentController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -38,6 +41,29 @@ Route::middleware('auth:sanctum')->group(function () {
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'show']);     // Get current user's profile
     Route::put('/profile', [UserProfileController::class, 'update']);   // Update current user's profile
+
+    // Wishlist
+    Route::get('/wishlist', [WishlistController::class, 'index']);                      // Get user's wishlist
+    Route::post('/wishlist', [WishlistController::class, 'store']);                     // Add book to wishlist
+    Route::delete('/wishlist/{bookId}', [WishlistController::class, 'destroy']);        // Remove book from wishlist
+    Route::get('/wishlist/check/{bookId}', [WishlistController::class, 'check']);       // Check if book is in wishlist
+    Route::delete('/wishlist', [WishlistController::class, 'clear']);                   // Clear entire wishlist
+
+    // Cart
+    Route::get('/cart', [CartController::class, 'index']);                  // Get user's cart    
+    Route::post('/cart', [CartController::class, 'store']);                 // Add book to cart    
+    Route::put('/cart/{bookId}', [CartController::class, 'update']);        // Update cart item quantity
+    Route::delete('/cart/{bookId}', [CartController::class, 'destroy']);    // Remove item from cart
+    Route::delete('/cart', [CartController::class, 'clear']);               // Clear entire cart
+
+    // Payment
+    Route::post('/payment/verify-password', [PaymentController::class, 'verifyPaymentWithPassword']);   // Verify payment with password
+    Route::post('/payment/verify-face', [PaymentController::class, 'verifyPaymentWithFace']);           // Verify payment with facial recognition
+    Route::get('/checkout/summary', [PaymentController::class, 'getCheckoutSummary']);                  // Get checkout summary
+
+    // Orders
+    Route::get('/orders', [OrderController::class, 'index']);           // Get order history
+    Route::get('/orders/{orderId}', [OrderController::class, 'show']);  // Get order details
 
     // Book Rating and Reviews
     Route::post('/book-reviews', [BookReviewController::class, 'store']);                       // Submit a rating and review for a book
