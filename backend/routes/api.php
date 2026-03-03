@@ -12,10 +12,14 @@ use App\Http\Controllers\Api\BookReviewController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PasswordResetController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/password/forgot',      [PasswordResetController::class, 'forgotPassword']);
+Route::post('/password/verify-otp',  [PasswordResetController::class, 'verifyOtp']);
+Route::post('/password/reset',       [PasswordResetController::class, 'resetPassword']);
 
 // Books - public access
 Route::get('/books', [BookController::class, 'index']);
@@ -36,7 +40,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::put('/user', [AuthController::class, 'updateProfile']);
-    Route::put('/password', [AuthController::class, 'changePassword']);
+    Route::post('/password/change', [PasswordResetController::class, 'changePassword']);
 
     // User Profile
     Route::get('/profile', [UserProfileController::class, 'show']);     // Get current user's profile
