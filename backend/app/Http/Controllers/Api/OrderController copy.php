@@ -16,45 +16,24 @@ class OrderController extends Controller
      */
     public function index(Request $request)
     {
-        try {
-            $orders = Order::with(['items.book'])
-                ->where('user_id', $request->user()->user_id)
-                ->orderBy('created_at', 'desc')
-                ->paginate(10);
+        $orders = Order::with(['items.book'])
+            ->where('user_id', $request->user()->user_id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
 
-            return response()->json($orders);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to retrieve orders',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json($orders);
     }
 
+    /**
+     * Get single order
+     */
     public function show(Request $request, $id)
     {
-        try {
-            $order = Order::with(['items.book.author', 'user'])
-                ->where('user_id', $request->user()->user_id)
-                ->findOrFail($id);
+        $order = Order::with(['items.book.author', 'user'])
+            ->where('user_id', $request->user()->user_id)
+            ->findOrFail($id);
 
-            return response()->json($order);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Order not found',
-            ], 404);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to retrieve order',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json($order);
     }
 
     /**
@@ -144,67 +123,44 @@ class OrderController extends Controller
      */
     public function getAllOrders(Request $request)
     {
-        try {
-            $query = Order::with(['items.book', 'user']);
+        $query = Order::with(['items.book', 'user']);
 
-            if ($request->has('status')) {
-                $query->where('status', $request->status);
-            }
-            if ($request->has('payment_status')) {
-                $query->where('payment_status', $request->payment_status);
-            }
-            if ($request->has('order_number')) {
-                $query->where('order_number', 'like', "%{$request->order_number}%");
-            }
-
-            $orders = $query->orderBy('created_at', 'desc')->paginate(20);
-
-            return response()->json($orders);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to retrieve orders',
-                'details' => $e->getMessage(),
-            ], 500);
+        // Filter by status
+        if ($request->has('status')) {
+            $query->where('status', $request->status);
         }
+
+        // Filter by payment status
+        if ($request->has('payment_status')) {
+            $query->where('payment_status', $request->payment_status);
+        }
+
+        // Search by order number
+        if ($request->has('order_number')) {
+            $query->where('order_number', 'like', "%{$request->order_number}%");
+        }
+
+        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+
+        return response()->json($orders);
     }
 
+    /**
+     * Update order status (Admin only)
+     */
     public function updateStatus(Request $request, $id)
     {
-        try {
-            $request->validate([
-                'status' => 'sometimes|in:pending,processing,shipped,delivered,cancelled',
-                'payment_status' => 'sometimes|in:pending,paid,failed',
-            ]);
+        $request->validate([
+            'status' => 'sometimes|in:pending,processing,shipped,delivered,cancelled',
+            'payment_status' => 'sometimes|in:pending,paid,failed',
+        ]);
 
-            $order = Order::findOrFail($id);
-            $order->update($request->only(['status', 'payment_status']));
+        $order = Order::findOrFail($id);
+        $order->update($request->only(['status', 'payment_status']));
 
-            return response()->json([
-                'message' => 'Order updated successfully',
-                'order' => $order->load(['items.book']),
-            ]);
-
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Order not found',
-            ], 404);
-
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Validation failed',
-                'details' => $e->errors(),
-            ], 422);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'Failed to update order',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'message' => 'Order updated successfully',
+            'order' => $order->load(['items.book']),
+        ]);
     }
 }
