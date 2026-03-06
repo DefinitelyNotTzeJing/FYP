@@ -13,6 +13,8 @@ use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PasswordResetController;
+use App\Http\Controllers\Api\AuthorController;
+use App\Http\Controllers\Api\CategoryController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -26,6 +28,14 @@ Route::get('/books', [BookController::class, 'index']);
 Route::get('/books/search', [BookController::class, 'search']);
 Route::get('/books/category/{category}', [BookController::class, 'byCategory']);
 Route::get('/books/{id}', [BookController::class, 'show']);
+
+// Authors - public access
+Route::get('/authors', [AuthorController::class, 'index']);
+Route::get('/authors/{id}', [AuthorController::class, 'show']);
+
+// Categories - public access
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{id}', [CategoryController::class, 'show']);
 
 // Book Reviews - public access
 Route::get('/books/{bookId}/reviews', [BookReviewController::class, 'getBookReviews']);
@@ -92,6 +102,16 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/books', [BookController::class, 'store']);
         Route::put('/books/{id}', [BookController::class, 'update']);
         Route::delete('/books/{id}', [BookController::class, 'destroy']);
+
+        // Authors management
+        Route::post('/authors', [AuthorController::class, 'store']);
+        Route::put('/authors/{id}', [AuthorController::class, 'update']);
+        Route::delete('/authors/{id}', [AuthorController::class, 'destroy']);
+
+        // Categories management
+        Route::post('/categories', [CategoryController::class, 'store']);
+        Route::put('/categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 
         // Orders management
         Route::get('/admin/orders', [OrderController::class, 'getAllOrders']);

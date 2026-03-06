@@ -149,7 +149,7 @@ class BookController extends Controller
     {
         try {
             $request->validate([
-                'book_name' => 'required|string|max:255',
+                'book_name' => 'required|string|max:255|unique:books,book_name',
                 'book_description' => 'nullable|string',
                 'author_id' => 'required|exists:authors,author_id',
                 'category_id' => 'required|exists:categories,category_id',
@@ -188,7 +188,7 @@ class BookController extends Controller
             $book = Book::findOrFail($id);
 
             $request->validate([
-                'book_name' => 'sometimes|string|max:255',
+                'book_name' => 'sometimes|string|max:255|unique:books,book_name,' . $id . ',book_id',
                 'book_description' => 'sometimes|string',
                 'author_id' => 'sometimes|exists:authors,author_id',
                 'category_id' => 'sometimes|exists:categories,category_id',
