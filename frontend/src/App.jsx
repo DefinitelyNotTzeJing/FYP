@@ -1,109 +1,35 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import { CartProvider } from './context/CartContext';
+import { useState } from "react";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import HomePage from "./pages/HomePage";
+import AuthPage from "./pages/AuthPage";
+import "./styles/global.css";
 
-// Layout
-import Navbar from './components/layout/Navbar';
-// import Footer from './components/layout/Footer';
+function AppRoutes() {
+  const { user, loading } = useAuth();
+  const [page, setPage]   = useState("home"); // "home" | "auth"
 
-// Pages
-import Home from './pages/Home';
-// import BookList from './pages/BookList';
-// import BookDetail from './pages/BookDetail';
-// import Cart from './pages/Cart';
-// import Checkout from './pages/Checkout';
-// import Login from './pages/Login';
-// import Register from './pages/Register';
-// import Profile from './pages/Profile';
-// import OrderHistory from './pages/OrderHistory';
+  if (loading) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", color: "var(--muted)", fontFamily: "var(--font-body)" }}>
+        Loading…
+      </div>
+    );
+  }
 
-// Admin Pages
-// import AdminDashboard from './pages/admin/Dashboard';
-// import AdminBooks from './pages/admin/Books';
-// import AdminOrders from './pages/admin/Orders';
+  // If user just logged in via AuthPage, go home
+  if (user && page === "auth") setPage("home");
 
-// Protected Route
-import ProtectedRoute from './routes/ProtectedRoute';
+  if (page === "auth") {
+    return <AuthPage onNavigateHome={() => setPage("home")} />;
+  }
 
-import './styles/Globals.css';
+  return <HomePage onNavigateToAuth={() => setPage("auth")} />;
+}
 
-function App() {
+export default function App() {
   return (
     <AuthProvider>
-      <CartProvider>
-        <Router>
-          <div className="app">
-            <Navbar />
-            <main className="main-content">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Home />} />
-                {/* <Route path="/books" element={<BookList />} />
-                <Route path="/books/:id" element={<BookDetail />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} /> */}
-
-                {/* Protected Routes */}
-                <Route
-                  path="/checkout"
-                  element={
-                    <ProtectedRoute>
-                      {/* <Checkout /> */}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      {/* <Profile /> */}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/orders"
-                  element={
-                    <ProtectedRoute>
-                      {/* <OrderHistory /> */}
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Admin Routes */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      {/* <AdminDashboard /> */}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/books"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      {/* <AdminBooks /> */}
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/orders"
-                  element={
-                    <ProtectedRoute adminOnly>
-                      {/* <AdminOrders /> */}
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </main>
-            {/* <Footer /> */}
-          </div>
-        </Router>
-      </CartProvider>
+      <AppRoutes />
     </AuthProvider>
   );
 }
-
-export default App;
