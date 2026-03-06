@@ -1,69 +1,31 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useCart } from '../../context/CartContext';
-import './BookCard.css';
+import Stars from "../stars/Stars";
+import "../../styles/BookCard.css";
 
-const BookCard = ({ book }) => {
-  const { addToCart } = useCart();
-
-  const handleAddToCart = (e) => {
-    e.preventDefault();
-    addToCart(book);
-  };
-
+export default function BookCard({ book, onClick }) {
   return (
-    <Link to={`/books/${book.id}`} className="book-card">
-      <div className="book-card-image">
-        <img 
-          src={book.cover_image || '/placeholder-book.jpg'} 
-          alt={book.title}
-          loading="lazy"
-        />
-        {book.discount && (
-          <div className="book-badge">-{book.discount}%</div>
-        )}
-      </div>
-      
-      <div className="book-card-content">
-        <h3 className="book-title">{book.title}</h3>
-        <p className="book-author">{book.author}</p>
-        
-        <div className="book-rating">
-          <span className="stars">
-            {'★'.repeat(Math.floor(book.rating || 5))}
-            {'☆'.repeat(5 - Math.floor(book.rating || 5))}
-          </span>
-          <span className="rating-count">({book.reviews_count || 0})</span>
+    <div className="book-card" onClick={() => onClick(book)}>
+      {book.cover_image_url ? (
+        <div className="book-card__cover">
+          <img src={book.cover_image_url} alt={book.book_name} />
         </div>
-        
-        <div className="book-footer">
-          <div className="book-price">
-            {book.discount ? (
-              <>
-                <span className="price-original">${book.price}</span>
-                <span className="price-current">
-                  ${(book.price * (1 - book.discount / 100)).toFixed(2)}
-                </span>
-              </>
-            ) : (
-              <span className="price-current">${book.price}</span>
-            )}
-          </div>
-          
-          <button 
-            onClick={handleAddToCart}
-            className="btn-add-cart"
-            aria-label="Add to cart"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M9 2L7.17 4H4a2 2 0 00-2 2v13a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-3.17L15 2H9z"/>
-              <circle cx="12" cy="13" r="4"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-    </Link>
-  );
-};
+      ) : (
+        <div className="book-card__cover">{book.book_name}</div>
+      )}
 
-export default BookCard;
+      <div className="book-card__info">
+        {book.is_featured && <div className="badge badge--featured">Featured</div>}
+        {book.available_quantity === 0 && (
+          <div className="badge badge--oos">Out of Stock</div>
+        )}
+        <div className="book-card__title">{book.book_name}</div>
+        <div className="book-card__author">{book.author?.name}</div>
+        <div className="book-card__footer">
+          <span className="book-card__price">
+            RM {parseFloat(book.price).toFixed(2)}
+          </span>
+          <Stars rating={book.book_total_rating} count={book.book_number_of_rating} />
+        </div>
+      </div>
+    </div>
+  );
+}

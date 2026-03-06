@@ -22,10 +22,10 @@
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--ink);
-  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
+  flex-shrink: 0;
 }
 
 .navbar__logo span {
@@ -67,38 +67,195 @@
   background: var(--white);
 }
 
+/* ── Actions row ── */
 .navbar__actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.5rem;
+  flex-shrink: 0;
 }
 
 .navbar__action-btn {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 1.1rem;
-  padding: 0.25rem;
+  padding: 0.4rem 0.6rem;
   border-radius: 6px;
-  transition: color 0.15s;
+  transition: color 0.15s, background 0.15s;
   display: flex;
   align-items: center;
   gap: 0.35rem;
   font-family: var(--font-body);
   font-size: 0.88rem;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.navbar__action-btn:hover { color: var(--ink); }
+.navbar__action-btn:hover {
+  color: var(--ink);
+  background: var(--paper-dark);
+}
 
-.navbar__cart-count {
+.navbar__signin-btn {
+  background: var(--ink);
+  color: var(--white) !important;
+  padding: 0.45rem 1rem;
+  border-radius: 7px;
+  font-weight: 500;
+}
+
+.navbar__signin-btn:hover {
+  background: var(--accent) !important;
+  color: var(--white) !important;
+}
+
+/* ── Badge (cart count, wishlist count) ── */
+.navbar__icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.navbar__badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
   background: var(--accent);
   color: white;
-  font-size: 0.68rem;
-  font-weight: 500;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
+  font-size: 0.6rem;
+  font-weight: 600;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+}
+
+/* ── User dropdown ── */
+.navbar__user-menu {
+  position: relative;
+}
+
+.navbar__user-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--ink);
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.navbar__user-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-light);
+}
+
+.navbar__avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 0.65rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.navbar__username {
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.navbar__chevron {
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+
+.navbar__dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+  min-width: 180px;
+  overflow: hidden;
+  animation: dropdownIn 0.15s ease;
+  z-index: 200;
+}
+
+@keyframes dropdownIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.navbar__dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: none;
+  border: none;
+  font-family: var(--font-body);
+  font-size: 0.88rem;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.navbar__dropdown-item:hover { background: var(--paper); }
+
+.navbar__dropdown-item--danger { color: #c0392b; }
+.navbar__dropdown-item--danger:hover { background: #fef2f2; }
+
+.navbar__dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.25rem 0;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .navbar__actions .navbar__action-btn span:not(.navbar__icon-wrap) { display: none; }
+  .navbar__username { display: none; }
+}
+
+/* Wishlist badge inside dropdown */
+.navbar__dropdown-icon-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.navbar__dropdown-badge {
+  margin-left: auto;
+  background: var(--accent);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 600;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
 }

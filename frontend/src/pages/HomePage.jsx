@@ -1,12 +1,15 @@
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Sidebar from "../components/Sidebar";
-import BookCard from "../components/BookCard";
-import BookModal from "../components/BookModal";
+import Navbar from "../components/nav/Navbar";
+import Sidebar from "../components/nav/Sidebar";
+import BookCard from "../components/common/BookCard";
+import BookModal from "../components/common/BookModal";
 import { useBooks, useCategories } from "../hooks/useBooks";
+import { useWishlist, useCart } from "../hooks/useProfile";
+import { useAuth } from "../context/AuthContext";
 import "../styles/HomePage.css";
 
-export default function HomePage({ onNavigateToAuth }) {
+export default function HomePage({ onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
+  const { token } = useAuth();
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -17,38 +20,21 @@ export default function HomePage({ onNavigateToAuth }) {
   const [sortBy, sortOrder] = sortValue.split("__");
   const categories = useCategories();
   const { books, pagination, loading, error } = useBooks({
-    search,
-    selectedCategory,
-    sortBy,
-    sortOrder,
-    page,
+    search, selectedCategory, sortBy, sortOrder, page,
   });
+
+  const wishlistHook = useWishlist(token);
+  const cartHook     = useCart(token);
 
   // Debounced search
   useEffect(() => {
-    const t = setTimeout(() => {
-      setSearch(searchInput);
-      setPage(1);
-    }, 400);
+    const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 400);
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  const handleCategory = (id) => {
-    setSelectedCategory(id);
-    setPage(1);
-  };
-
-  const handleSort = (val) => {
-    setSortValue(val);
-    setPage(1);
-  };
-
-  const handleLogoClick = () => {
-    setSearchInput("");
-    setSearch("");
-    setSelectedCategory(null);
-    setPage(1);
-  };
+  const handleCategory = (id) => { setSelectedCategory(id); setPage(1); };
+  const handleSort = (val) => { setSortValue(val); setPage(1); };
+  const handleLogoClick = () => { setSearchInput(""); setSearch(""); setSelectedCategory(null); setPage(1); };
 
   const totalPages = pagination?.last_page || 1;
 
@@ -65,6 +51,13 @@ export default function HomePage({ onNavigateToAuth }) {
         onSearchChange={setSearchInput}
         onLogoClick={handleLogoClick}
         onNavigateToAuth={onNavigateToAuth}
+        onNavigateToProfile={onNavigateToProfile}
+        cartCount={cartHook.totalQty}
+        wishlistCount={wishlistHook.items.length}
+        onNavigateToWishlist={onNavigateToWishlist}
+        onNavigateToOrders={onNavigateToOrders}
+        onNavigateToCart={onNavigateToCart}
+        onNavigateToReviews={onNavigateToReviews}
       />
 
       <main className="home">
@@ -80,9 +73,7 @@ export default function HomePage({ onNavigateToAuth }) {
           <div>
             <div className="home__content-header">
               <h1 className="home__title">{pageTitle}</h1>
-              {pagination && (
-                <span className="home__count">{pagination.total} books</span>
-              )}
+              {pagination && <span className="home__count">{pagination.total} books</span>}
             </div>
 
             {error && <div className="state-error">⚠ {error}</div>}
@@ -97,51 +88,21 @@ export default function HomePage({ onNavigateToAuth }) {
             ) : (
               <div className="book-grid">
                 {books.map((book) => (
-                  <BookCard
-                    key={book.book_id}
-                    book={book}
-                    onClick={setSelectedBook}
-                  />
+                  <BookCard key={book.book_id} book={book} onClick={setSelectedBook} />
                 ))}
               </div>
             )}
 
-            {/* Pagination */}
             {totalPages > 1 && (
               <div className="pagination">
-                <button
-                  className="pagination__btn"
-                  onClick={() => setPage((p) => p - 1)}
-                  disabled={page === 1}
-                >
-                  ‹
-                </button>
+                <button className="pagination__btn" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>‹</button>
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-                  const p =
-                    totalPages <= 7
-                      ? i + 1
-                      : page <= 4
-                      ? i + 1
-                      : page >= totalPages - 3
-                      ? totalPages - 6 + i
-                      : page - 3 + i;
+                  const p = totalPages <= 7 ? i + 1 : page <= 4 ? i + 1 : page >= totalPages - 3 ? totalPages - 6 + i : page - 3 + i;
                   return (
-                    <button
-                      key={p}
-                      className={`pagination__btn${page === p ? " pagination__btn--active" : ""}`}
-                      onClick={() => setPage(p)}
-                    >
-                      {p}
-                    </button>
+                    <button key={p} className={`pagination__btn${page === p ? " pagination__btn--active" : ""}`} onClick={() => setPage(p)}>{p}</button>
                   );
                 })}
-                <button
-                  className="pagination__btn"
-                  onClick={() => setPage((p) => p + 1)}
-                  disabled={page === totalPages}
-                >
-                  ›
-                </button>
+                <button className="pagination__btn" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}>›</button>
               </div>
             )}
           </div>
@@ -149,7 +110,13 @@ export default function HomePage({ onNavigateToAuth }) {
       </main>
 
       {selectedBook && (
-        <BookModal book={selectedBook} onClose={() => setSelectedBook(null)} />
+        <BookModal
+          book={selectedBook}
+          onClose={() => setSelectedBook(null)}
+          onRequireAuth={onNavigateToAuth}
+          wishlistHook={wishlistHook}
+          cartHook={cartHook}
+        />
       )}
     </>
   );
