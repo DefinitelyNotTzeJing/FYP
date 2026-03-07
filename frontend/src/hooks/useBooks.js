@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../utils/api";
 
 export function useBooks({ search, selectedCategory, sortBy, sortOrder, page }) {
-  const [books, setBooks] = useState([]);
+  const [books, setBooks]         = useState([]);
   const [pagination, setPagination] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(null);
 
   const fetchBooks = useCallback(() => {
     setLoading(true);
@@ -17,7 +17,10 @@ export function useBooks({ search, selectedCategory, sortBy, sortOrder, page }) 
       sort_by: sortBy,
       sort_order: sortOrder,
     });
-    if (search) params.set("search", search);
+    if (search) {
+      params.set("search", search);        // search by book title
+      params.set("author", search);        // search by author name
+    }
     if (selectedCategory) params.set("category_id", selectedCategory);
 
     apiFetch(`/books?${params}`)

@@ -43,6 +43,7 @@ Route::get('/books/{bookId}/reviews', [BookReviewController::class, 'getBookRevi
 // Face Recognition Routes
 Route::get('/face/health', [FaceRecognitionController::class, 'healthCheck']);
 Route::post('/face/verify', [FaceRecognitionController::class, 'verifyFace']);
+Route::post('/face/check-pose', [FaceRecognitionController::class, 'checkPose']);
 
 // Protected routes
 Route::middleware('auth:sanctum')->group(function () {

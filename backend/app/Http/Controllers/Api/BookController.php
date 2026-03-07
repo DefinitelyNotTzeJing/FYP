@@ -28,13 +28,19 @@ class BookController extends Controller
             if ($request->has('in_stock')) {
                 $query->where('available_quantity', '>', 0);
             }
-            if ($request->has('search')) {
+
+            // Search by title, description, OR author name
+            if ($request->has('search') && $request->search) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('book_name', 'like', "%{$search}%")
-                      ->orWhere('book_description', 'like', "%{$search}%");
+                      ->orWhere('book_description', 'like', "%{$search}%")
+                      ->orWhereHas('author', function ($aq) use ($search) {
+                          $aq->where('name', 'like', "%{$search}%");
+                      });
                 });
             }
+
             if ($request->has('min_price')) {
                 $query->where('price', '>=', $request->min_price);
             }
@@ -149,14 +155,14 @@ class BookController extends Controller
     {
         try {
             $request->validate([
-                'book_name' => 'required|string|max:255|unique:books,book_name',
-                'book_description' => 'nullable|string',
-                'author_id' => 'required|exists:authors,author_id',
-                'category_id' => 'required|exists:categories,category_id',
-                'price' => 'required|numeric|min:0',
+                'book_name'          => 'required|string|max:255|unique:books,book_name',
+                'book_description'   => 'nullable|string',
+                'author_id'          => 'required|exists:authors,author_id',
+                'category_id'        => 'required|exists:categories,category_id',
+                'price'              => 'required|numeric|min:0',
                 'available_quantity' => 'required|integer|min:0',
-                'cover_image_url' => 'nullable|url',
-                'is_featured' => 'sometimes|boolean',
+                'cover_image_url'    => 'nullable|url',
+                'is_featured'        => 'sometimes|boolean',
             ]);
 
             $book = Book::create($request->all());
@@ -188,14 +194,14 @@ class BookController extends Controller
             $book = Book::findOrFail($id);
 
             $request->validate([
-                'book_name' => 'sometimes|string|max:255|unique:books,book_name,' . $id . ',book_id',
-                'book_description' => 'sometimes|string',
-                'author_id' => 'sometimes|exists:authors,author_id',
-                'category_id' => 'sometimes|exists:categories,category_id',
-                'price' => 'sometimes|numeric|min:0',
+                'book_name'          => 'sometimes|string|max:255|unique:books,book_name,' . $id . ',book_id',
+                'book_description'   => 'sometimes|string',
+                'author_id'          => 'sometimes|exists:authors,author_id',
+                'category_id'        => 'sometimes|exists:categories,category_id',
+                'price'              => 'sometimes|numeric|min:0',
                 'available_quantity' => 'sometimes|integer|min:0',
-                'cover_image_url' => 'sometimes|url',
-                'is_featured' => 'sometimes|boolean',
+                'cover_image_url'    => 'sometimes|url',
+                'is_featured'        => 'sometimes|boolean',
             ]);
 
             $book->update($request->all());

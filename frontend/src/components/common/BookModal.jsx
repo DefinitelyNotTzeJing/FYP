@@ -4,14 +4,14 @@ import { apiFetch } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/BookModal.css";
 
-export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, cartHook }) {
+export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, cartHook, initialInWishlist = false }) {
   const { token } = useAuth();
-  const [detail, setDetail]               = useState(null);
-  const [loading, setLoading]             = useState(true);
-  const [inWishlist, setInWishlist]       = useState(false);
+  const [detail, setDetail]                   = useState(null);
+  const [loading, setLoading]                 = useState(true);
+  const [inWishlist, setInWishlist]           = useState(initialInWishlist);
   const [wishlistLoading, setWishlistLoading] = useState(false);
-  const [cartLoading, setCartLoading]     = useState(false);
-  const [cartMsg, setCartMsg]             = useState(null);
+  const [cartLoading, setCartLoading]         = useState(false);
+  const [cartMsg, setCartMsg]                 = useState(null);
 
   useEffect(() => {
     apiFetch(`/books/${book.book_id}`)
@@ -19,10 +19,11 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
       .catch(() => { setDetail(book); setLoading(false); });
   }, [book]);
 
+  // Only check wishlist status if not already known (i.e. not opened from wishlist page)
   useEffect(() => {
-    if (!token || !wishlistHook) return;
+    if (!token || !wishlistHook || initialInWishlist) return;
     wishlistHook.check(book.book_id).then(setInWishlist);
-  }, [book.book_id, token, wishlistHook]);
+  }, [book.book_id, token, wishlistHook, initialInWishlist]);
 
   const b = detail || book;
   const reviews = b.reviews || [];
@@ -50,8 +51,9 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
       await cartHook.add(book.book_id, 1);
       setCartMsg({ ok: true, text: "Added to cart!" });
       setTimeout(() => setCartMsg(null), 2500);
-    } catch {
-      setCartMsg({ ok: false, text: "Failed to add to cart." });
+    } catch (e) {
+      console.error("Cart error:", e?.response || e);
+      setCartMsg({ ok: false, text: e?.response?.message || "Failed to add to cart." });
     }
     setCartLoading(false);
   }
@@ -103,7 +105,7 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
                     {cartLoading ? "Adding…" : b.available_quantity === 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
                   <button className="btn-secondary" onClick={handleWishlist} disabled={wishlistLoading} style={inWishlist ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}}>
-                    {inWishlist ? "♥ Wishlisted" : "♡ Wishlist"}
+                    {wishlistLoading ? "…" : inWishlist ? "♥ Wishlisted" : "♡ Wishlist"}
                   </button>
                 </div>
               </div>

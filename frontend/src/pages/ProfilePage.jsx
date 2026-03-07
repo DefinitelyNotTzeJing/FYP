@@ -4,6 +4,7 @@ import Navbar from "../components/nav/Navbar";
 import EditProfileTab from "../components/profile/EditProfileTab";
 import ReviewsTab from "../components/tabs/ReviewsTab";
 import ChangePasswordTab from "../components/profile/ChangePasswordTab";
+import FaceRegisterTab from "../components/profile/FaceRegisterTab";
 import { useProfile, useMyReviews } from "../hooks/useProfile";
 import "../styles/profile/ProfilePage.css";
 
@@ -11,19 +12,21 @@ const TABS = [
   { key: "profile",  label: "Profile" },
   { key: "reviews",  label: "My Reviews" },
   { key: "password", label: "Change Password" },
+  { key: "face",     label: "Face Login" },
 ];
 
-export default function ProfilePage({ onNavigateHome, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, initialTab = "profile" }) {
+export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, initialTab = "profile" }) {
   const { user, token } = useAuth();
-  const [tab, setTab] = useState(initialTab);
+  const [tab, setTab]                   = useState(initialTab);
   const [pendingImage, setPendingImage] = useState(null);
   const fileRef = useRef();
 
   const { profile, loading: profileLoading, updateProfile } = useProfile(token);
-  const { reviews, loading: reviewsLoading } = useMyReviews(token);
+  const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useMyReviews(token);
 
-  const initials  = user?.username ? user.username.slice(0, 2).toUpperCase() : "?";
-  const avatarUrl = pendingImage || profile?.profile?.profile_image_url || null;
+  const savedAvatarUrl = profile?.profile?.profile_image_url || null;
+  const avatarSrc      = pendingImage || savedAvatarUrl;
+  const initials       = user?.username ? user.username.slice(0, 2).toUpperCase() : "?";
 
   function handleAvatarClick() { fileRef.current.click(); }
 
@@ -37,9 +40,8 @@ export default function ProfilePage({ onNavigateHome, onNavigateToWishlist, onNa
   }
 
   async function handleSave(formData) {
-    const payload = pendingImage
-      ? { ...formData, profile_image_url: pendingImage }
-      : formData;
+    const payload = { ...formData };
+    if (pendingImage) payload.profile_image_url = pendingImage;
     await updateProfile(payload);
     setPendingImage(null);
   }
@@ -48,6 +50,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToWishlist, onNa
     <>
       <Navbar
         onLogoClick={onNavigateHome}
+        onNavigateToAuth={onNavigateToAuth}
         onNavigateToProfile={() => {}}
         onNavigateToWishlist={onNavigateToWishlist}
         onNavigateToOrders={onNavigateToOrders}
@@ -58,21 +61,24 @@ export default function ProfilePage({ onNavigateHome, onNavigateToWishlist, onNa
       <div className="profile-page">
         <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
 
-        {/* Clickable header avatar */}
+        {/* Header */}
         <div className="profile-header">
           <div
             className="profile-avatar profile-avatar--clickable"
             onClick={handleAvatarClick}
             title="Click to change photo"
           >
-            {avatarUrl ? <img src={avatarUrl} alt={user?.username} /> : initials}
+            {avatarSrc
+              ? <img src={avatarSrc} alt={user?.username} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+              : initials
+            }
             <div className="profile-avatar__overlay">📷</div>
           </div>
           <div className="profile-header__info">
             <div className="profile-header__name">{user?.username}</div>
             <div className="profile-header__email">{user?.email}</div>
             <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "0.25rem" }}>
-              Click the photo to change it
+              {pendingImage ? "New photo selected — save to apply" : "Click the photo to change it"}
             </div>
             {user?.is_admin && <div className="profile-header__badge">Admin</div>}
           </div>
@@ -97,13 +103,10 @@ export default function ProfilePage({ onNavigateHome, onNavigateToWishlist, onNa
         </div>
 
         {/* Tab content */}
-        {tab === "profile" && (
-          profileLoading
-            ? <div className="profile-loading">Loading profile…</div>
-            : <EditProfileTab profile={profile} onSave={handleSave} pendingImage={pendingImage} />
-        )}
-        {tab === "reviews"  && <ReviewsTab reviews={reviews} loading={reviewsLoading} />}
+        {tab === "profile"  && (profileLoading ? <div className="profile-loading">Loading profile…</div> : <EditProfileTab profile={profile} onSave={handleSave} pendingImage={pendingImage} />)}
+        {tab === "reviews"  && <ReviewsTab reviews={reviews} loading={reviewsLoading} onRefresh={refreshReviews} />}
         {tab === "password" && <ChangePasswordTab />}
+        {tab === "face"     && <FaceRegisterTab />}
       </div>
     </>
   );

@@ -24,8 +24,7 @@ export function useProfile(token) {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     });
-    // Refresh from server to get latest saved data
-    fetch_();
+    fetch_(); // re-fetch to confirm saved data
     return data;
   }
 
@@ -54,7 +53,7 @@ export function useWishlist(token) {
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify({ book_id: bookId }),
     });
-    fetch_(); // refresh to get full book data
+    fetch_();
   }
 
   async function remove(bookId) {
@@ -62,7 +61,6 @@ export function useWishlist(token) {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-    // Filter by nested book_id since items have structure { book: { book_id } }
     setItems((prev) => prev.filter((i) => i.book?.book_id !== bookId && i.book_id !== bookId));
   }
 
@@ -149,14 +147,16 @@ export function useOrders(token) {
   const [orders, setOrders]   = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetch_ = useCallback(() => {
     if (!token) return;
     apiFetch("/orders", { headers: { Authorization: `Bearer ${token}` } })
       .then((d) => { setOrders(d.data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [token]);
 
-  return { orders, loading };
+  useEffect(() => { fetch_(); }, [fetch_]);
+
+  return { orders, loading, refresh: fetch_ };
 }
 
 // ── My Reviews ─────────────────────────────────────────────────────────────
@@ -165,12 +165,14 @@ export function useMyReviews(token) {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetch_ = useCallback(() => {
     if (!token) return;
     apiFetch("/reviews/my", { headers: { Authorization: `Bearer ${token}` } })
       .then((d) => { setReviews(d.data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [token]);
 
-  return { reviews, loading };
+  useEffect(() => { fetch_(); }, [fetch_]);
+
+  return { reviews, loading, refresh: fetch_ };
 }

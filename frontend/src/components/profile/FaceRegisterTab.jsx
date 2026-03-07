@@ -11,27 +11,24 @@ const CAPTURE_DURATION_MS = 5000;
 const CAPTURE_INTERVAL_MS = 250;
 const POSE_CHECK_INTERVAL = 400;
 
-export default function FaceLoginForm({ onBack }) {
-  const { login } = useAuth();
+export default function FaceRegisterTab() {
+  const { token } = useAuth();
 
-  const [email, setEmail]             = useState("");
-  const [step, setStep]               = useState("email");
+  const [step, setStep]               = useState("idle");
   const [challenge, setChallenge]     = useState(null);
   const [countdown, setCountdown]     = useState(3);
   const [progress, setProgress]       = useState(0);
-  const [error, setError]             = useState(null);
   const [camReady, setCamReady]       = useState(false);
+  const [error, setError]             = useState(null);
   const [challengeDone, setChallengeDone] = useState(false);
 
   const videoRef     = useRef(null);
   const streamRef    = useRef(null);
   const framesRef    = useRef([]);
   const timerRef     = useRef(null);
-  const emailRef     = useRef("");
   const challengeRef = useRef(null);
   const capturingRef = useRef(false);
 
-  useEffect(() => { emailRef.current = email; }, [email]);
   useEffect(() => { challengeRef.current = challenge; }, [challenge]);
 
   useEffect(() => {
@@ -50,7 +47,7 @@ export default function FaceLoginForm({ onBack }) {
       })
       .catch(() => {
         setError("Could not access camera. Please allow camera permissions.");
-        setStep("email");
+        setStep("idle");
       });
   }, [step]);
 
@@ -110,31 +107,25 @@ export default function FaceLoginForm({ onBack }) {
       if (elapsed >= CAPTURE_DURATION_MS) {
         clearInterval(timerRef.current);
         stopCamera();
-        submitVerification(framesRef.current, emailRef.current, challengeRef.current);
+        submitRegistration(framesRef.current, challengeRef.current);
       }
     }, CAPTURE_INTERVAL_MS);
   }
 
-  async function submitVerification(frames, currentEmail, currentChallenge) {
-    if (frames.length < 5) {
-      setError("Not enough frames captured. Please try again.");
-      setStep("email");
-      return;
-    }
-    setStep("verifying");
+  async function submitRegistration(frames, currentChallenge) {
+    setStep("submitting");
     setError(null);
     try {
-      const data = await apiFetch("/face/verify", {
+      await apiFetch("/face/register", {
         method: "POST",
-        body: JSON.stringify({ email: currentEmail, frames, challenge_type: currentChallenge.type }),
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ frames, challenge_type: currentChallenge.type }),
       });
-      login(data.user, data.token);
+      setStep("done");
     } catch (e) {
-      const msg = e?.response?.message || e?.response?.error || "Face not recognised or liveness check failed.";
+      const msg = e?.response?.message || "Registration failed. Please try again in good lighting.";
       setError(msg);
-      setStep("email");
-      framesRef.current = [];
-      setProgress(0);
+      setStep("idle");
     }
   }
 
@@ -153,53 +144,82 @@ export default function FaceLoginForm({ onBack }) {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
-  if (step === "email") {
+  if (step === "done") {
     return (
-      <>
-        <button className="auth-back" onClick={onBack}>← Back to login</button>
-        <p style={{ fontSize: "0.88rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
-          Enter your email, then follow the on-screen direction to verify your identity.
-        </p>
-        {error && <div className="auth-alert auth-alert--error">{error}</div>}
-
-        <div style={{ background: "var(--paper-dark)", borderRadius: "8px", padding: "0.85rem 1rem", marginBottom: "1.25rem", fontSize: "0.82rem", color: "var(--muted)", lineHeight: 1.8 }}>
-          <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "0.3rem", fontSize: "0.84rem" }}>How it works:</div>
-          <div>1️⃣ &nbsp;Enter your email and open the camera</div>
-          <div>2️⃣ &nbsp;A 3-second countdown begins</div>
-          <div>3️⃣ &nbsp;Follow the on-screen direction (e.g. turn left)</div>
-          <div>4️⃣ &nbsp;Keep your face in the ring until the bar fills</div>
-          <div>5️⃣ &nbsp;You're logged in ✅</div>
+      <div style={{ textAlign: "center", padding: "3rem 2rem" }}>
+        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>✅</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+          Face registered successfully!
         </div>
-
-        <div className="auth-field">
-          <label className="auth-label">Email</label>
-          <input
-            className="auth-input" type="email" placeholder="you@example.com"
-            value={email} onChange={(e) => setEmail(e.target.value)} autoFocus
-          />
+        <div style={{ color: "var(--muted)", fontSize: "0.88rem", marginBottom: "1.5rem" }}>
+          You can now use face recognition to log in to your account.
         </div>
         <button
-          className="auth-submit" disabled={!email}
-          onClick={() => {
-            const c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
-            setChallenge(c);
-            challengeRef.current = c;
-            setError(null);
-            setStep("challenge");
-          }}
+          onClick={() => { setStep("idle"); setError(null); }}
+          style={{ padding: "0.55rem 1.25rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-body)", fontSize: "0.88rem" }}
         >
-          Continue to Camera
+          Register Again
         </button>
-      </>
+      </div>
     );
   }
 
-  if (step === "verifying") {
+  if (step === "submitting") {
     return (
       <div style={{ textAlign: "center", padding: "3rem 1rem" }}>
         <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔍</div>
-        <div style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>Verifying your identity…</div>
-        <div style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "0.5rem" }}>Running liveness check and face match</div>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>Processing your face…</div>
+        <div style={{ color: "var(--muted)", fontSize: "0.85rem", marginTop: "0.5rem" }}>Running liveness check and saving your face data</div>
+      </div>
+    );
+  }
+
+  if (step === "idle") {
+    return (
+      <div style={{ maxWidth: 480, margin: "0 auto", padding: "1.5rem 0" }}>
+        <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.75rem" }}>
+          <div style={{ fontSize: "2.5rem", textAlign: "center", marginBottom: "1rem" }}>🪪</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem", fontWeight: 600, textAlign: "center", marginBottom: "0.5rem" }}>
+            Face Recognition Login
+          </div>
+          <div style={{ color: "var(--muted)", fontSize: "0.85rem", textAlign: "center", marginBottom: "1.5rem", lineHeight: 1.6 }}>
+            Register your face to enable quick, password-free login. You'll be given a short liveness challenge to prevent photo spoofing.
+          </div>
+
+          {error && (
+            <div style={{ fontSize: "0.82rem", color: "#c0392b", background: "#fef2f2", border: "1px solid #fecaca", padding: "0.5rem 0.75rem", borderRadius: "6px", marginBottom: "1rem" }}>
+              ❌ {error}
+            </div>
+          )}
+
+          <div style={{ background: "var(--paper-dark)", borderRadius: "8px", padding: "1rem", marginBottom: "1.25rem", fontSize: "0.83rem", color: "var(--muted)", lineHeight: 1.8 }}>
+            <div style={{ fontWeight: 600, color: "var(--text)", marginBottom: "0.4rem", fontSize: "0.85rem" }}>How it works:</div>
+            <div>1️⃣ &nbsp;Camera opens — position your face in the ring</div>
+            <div>2️⃣ &nbsp;A 3-second countdown begins</div>
+            <div>3️⃣ &nbsp;Follow the on-screen direction (e.g. turn left)</div>
+            <div>4️⃣ &nbsp;Hold the pose for a moment, then return to center</div>
+            <div>5️⃣ &nbsp;Wait for confirmation ✅</div>
+          </div>
+
+          <div style={{ fontSize: "0.82rem", color: "var(--muted)", marginBottom: "1.25rem" }}>
+            <div style={{ marginBottom: "0.4rem" }}>✓ &nbsp;Liveness detection prevents photo spoofing</div>
+            <div style={{ marginBottom: "0.4rem" }}>✓ &nbsp;Your face data is stored securely</div>
+            <div>✓ &nbsp;Can be re-registered at any time</div>
+          </div>
+
+          <button
+            onClick={() => {
+              const c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+              setChallenge(c);
+              challengeRef.current = c;
+              setError(null);
+              setStep("challenge");
+            }}
+            style={{ width: "100%", padding: "0.75rem", background: "var(--accent)", color: "white", border: "none", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.95rem", fontWeight: 500, cursor: "pointer" }}
+          >
+            📷 &nbsp;Open Camera to Register
+          </button>
+        </div>
       </div>
     );
   }
@@ -207,12 +227,19 @@ export default function FaceLoginForm({ onBack }) {
   const isCapturing = step === "capturing";
 
   return (
-    <>
-      <button className="auth-back" onClick={() => { stopCamera(); setStep("email"); setError(null); }}>
-        ← Change email
+    <div style={{ maxWidth: 420, margin: "0 auto", padding: "1.5rem 0" }}>
+      <button
+        onClick={() => { stopCamera(); setStep("idle"); setError(null); }}
+        style={{ background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: "0.88rem", marginBottom: "1rem" }}
+      >
+        ← Cancel
       </button>
 
-      {error && <div className="auth-alert auth-alert--error" style={{ marginBottom: "0.75rem" }}>{error}</div>}
+      {error && (
+        <div style={{ fontSize: "0.82rem", color: "#c0392b", background: "#fef2f2", border: "1px solid #fecaca", padding: "0.5rem 0.75rem", borderRadius: "6px", marginBottom: "1rem" }}>
+          {error}
+        </div>
+      )}
 
       {challenge && (
         <div style={{
@@ -275,6 +302,6 @@ export default function FaceLoginForm({ onBack }) {
         {!isCapturing && countdown > 0 && `Starting in ${countdown}…`}
         {!isCapturing && countdown === 0 && "Capturing…"}
       </p>
-    </>
+    </div>
   );
 }
