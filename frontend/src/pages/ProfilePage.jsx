@@ -40,7 +40,9 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
   }
 
   async function handleSave(formData) {
-    const payload = { ...formData };
+    // Remove profile_image_base64 from form data — image is handled separately via pendingImage
+    const { profile_image_base64, ...rest } = formData;
+    const payload = { ...rest };
     if (pendingImage) payload.profile_image_base64 = pendingImage;
     await updateProfile(payload);
     setPendingImage(null);

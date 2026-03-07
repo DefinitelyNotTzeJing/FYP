@@ -13,8 +13,8 @@ class BookFactory extends Factory
         return [
             'book_name' => fake()->sentence(3),
             'book_description' => fake()->paragraph(3),
-            'author_id' => Author::factory(),
-            'category_id' => Category::factory(),
+            'author_id' => Author::inRandomOrder()->first()?->author_id,
+            'category_id' => Category::inRandomOrder()->first()?->category_id,
             'cover_image_url' => fake()->imageUrl(300, 400, 'books'),
             'price' => fake()->randomFloat(2, 9.99, 99.99),
             'available_quantity' => fake()->numberBetween(0, 100),
