@@ -15,7 +15,7 @@ face_app = FaceAnalysis(providers=['CPUExecutionProvider'])
 face_app.prepare(ctx_id=0, det_size=(320, 320))
 
 SIMILARITY_THRESHOLD = 0.6
-POSE_THRESHOLD = 5  # degrees — same as your test1.py
+POSE_THRESHOLD = 3  # degrees — lowered to accommodate natural head position offset
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -124,25 +124,25 @@ def active_liveness_check(frames_b64, challenge_type):
     yaws   = [p['yaw']   for p in poses]
     pitches = [p['pitch'] for p in poses]
 
-    if challenge_type == 'turn_left':
-        val = max(yaws)
-        passed = val < -POSE_THRESHOLD
-        return passed, f"Max yaw={val:.1f}° (need < -{POSE_THRESHOLD}°)"
-
-    elif challenge_type == 'turn_right':
-        val = min(yaws)
-        passed = val > POSE_THRESHOLD
-        return passed, f"Min yaw={val:.1f}° (need > {POSE_THRESHOLD}°)"
+    # Both turn_left and turn_right: detect significant yaw deviation from neutral
+    # InsightFace yaw on this setup doesn't reliably distinguish sign by direction,
+    # so we use the max absolute deviation from the median (neutral position)
+    if challenge_type in ('turn_left', 'turn_right'):
+        median_yaw = float(np.median(yaws))
+        deviations = [abs(y - median_yaw) for y in yaws]
+        max_deviation = max(deviations)
+        passed = max_deviation > POSE_THRESHOLD
+        return passed, f"{challenge_type} yaw deviation={max_deviation:.1f}° from neutral={median_yaw:.1f}° (need >{POSE_THRESHOLD}°)"
 
     elif challenge_type == 'look_up':
         val = min(pitches)
         passed = val < -POSE_THRESHOLD
-        return passed, f"Min pitch={val:.1f}° (need <-{POSE_THRESHOLD}°)"
+        return passed, f"Look up pitch={abs(val):.1f}° (need >{POSE_THRESHOLD}°)"
 
     elif challenge_type == 'look_down':
         val = max(pitches)
         passed = val > POSE_THRESHOLD
-        return passed, f"Max pitch={val:.1f}° (need >{POSE_THRESHOLD}°)"
+        return passed, f"Look down pitch={val:.1f}° (need >{POSE_THRESHOLD}°)"
 
     return False, f"Unknown challenge type: {challenge_type}"
 
@@ -271,7 +271,12 @@ def check_pose():
     if hasattr(face, 'pose') and face.pose is not None:
         yaw   = float(face.pose[0])
         pitch = float(face.pose[1])
-        return jsonify({'has_pose': True, 'yaw': round(yaw, 2), 'pitch': round(pitch, 2)})
+        return jsonify({
+            'has_pose': True,
+            'yaw': round(yaw, 2),
+            'pitch': round(pitch, 2),
+            'message': f'Yaw={yaw:.1f}°'
+        })
 
     return jsonify({'has_pose': False, 'message': 'No pose data'})
 

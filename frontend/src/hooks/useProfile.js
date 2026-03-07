@@ -19,13 +19,18 @@ export function useProfile(token) {
   useEffect(() => { fetch_(); }, [fetch_]);
 
   async function updateProfile(payload) {
-    const data = await apiFetch("/profile", {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    });
-    fetch_(); // re-fetch to confirm saved data
-    return data;
+    try {
+      const data = await apiFetch("/profile", {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      });
+      fetch_();
+      return data;
+    } catch (e) {
+      console.error("[updateProfile] error:", e?.response || e?.message || e);
+      throw e;
+    }
   }
 
   return { profile, loading, error, updateProfile, refresh: fetch_ };

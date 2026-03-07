@@ -3,8 +3,8 @@ import { useAuth } from "../../context/AuthContext";
 import { apiFetch, API_BASE } from "../../utils/api";
 
 const CHALLENGES = [
-  { type: "turn_left",  instruction: "Turn your head LEFT",  arrow: "⬅️", hint: "Slowly rotate your head to the left" },
-  { type: "turn_right", instruction: "Turn your head RIGHT", arrow: "➡️", hint: "Slowly rotate your head to the right" },
+  { type: "turn_left",  instruction: "Rotate your head",  arrow: "↔️", hint: "Slowly rotate your head left or right" },
+  { type: "turn_right", instruction: "Rotate your head",  arrow: "↔️", hint: "Slowly rotate your head left or right" },
 ];
 
 const CAPTURE_DURATION_MS = 5000;
@@ -22,6 +22,7 @@ export default function FaceLoginForm({ onBack }) {
   const [error, setError]             = useState(null);
   const [camReady, setCamReady]       = useState(false);
   const [challengeDone, setChallengeDone] = useState(false);
+  const [poseMsg, setPoseMsg]             = useState("");
 
   const videoRef     = useRef(null);
   const streamRef    = useRef(null);
@@ -37,7 +38,8 @@ export default function FaceLoginForm({ onBack }) {
   useEffect(() => {
     if (step !== "challenge") return;
     capturingRef.current = false;
-    setChallengeDone(false);
+setChallengeDone(false);
+    setPoseMsg("");
 
     navigator.mediaDevices.getUserMedia({ video: true })
       .then((stream) => {
@@ -77,6 +79,7 @@ export default function FaceLoginForm({ onBack }) {
     setProgress(0);
 
     let lastPoseCheck = 0;
+    const yawHistory = [];
 
     const start = Date.now();
     timerRef.current = setInterval(async () => {
@@ -98,10 +101,23 @@ export default function FaceLoginForm({ onBack }) {
             const data = await res.json();
             if (data.has_pose) {
               const c = challengeRef.current;
-              if (c?.type === "turn_left"  && data.yaw > 5)   setChallengeDone(true);
-              if (c?.type === "turn_right" && data.yaw < -5)  setChallengeDone(true);
-              if (c?.type === "look_up"    && data.pitch < -5) setChallengeDone(true);
-              if (c?.type === "look_down"  && data.pitch > 5)  setChallengeDone(true);
+              if (c?.type === "turn_left" || c?.type === "turn_right") {
+                yawHistory.push(data.yaw);
+                if (yawHistory.length >= 3) {
+                  const sorted = [...yawHistory].sort((a, b) => a - b);
+                  const median = sorted[Math.floor(sorted.length / 2)];
+                  const deviation = Math.abs(data.yaw - median);
+                  const needed = 3;
+                  if (deviation >= needed) {
+                    setChallengeDone(true);
+                    setPoseMsg(`✅ Head rotated ${deviation.toFixed(1)}° — great!`);
+                  } else {
+                    setPoseMsg(`Keep rotating… ${deviation.toFixed(1)}° / ${needed}°`);
+                  }
+                }
+              }
+              if (c?.type === "look_up"   && data.pitch < -3) { setChallengeDone(true); setPoseMsg("✅ Looking up — great!"); }
+              if (c?.type === "look_down" && data.pitch > 3)  { setChallengeDone(true); setPoseMsg("✅ Looking down — great!"); }
             }
           } catch (_) { /* non-fatal */ }
         }
@@ -230,6 +246,11 @@ export default function FaceLoginForm({ onBack }) {
             {isCapturing && !challengeDone && challenge.hint}
             {isCapturing && challengeDone && "Hold still until the bar fills"}
           </div>
+          {isCapturing && poseMsg && (
+            <div style={{ fontSize: "0.78rem", marginTop: "0.3rem", color: challengeDone ? "#16a34a" : "var(--accent)", fontWeight: 500 }}>
+              {poseMsg}
+            </div>
+          )}
         </div>
       )}
 

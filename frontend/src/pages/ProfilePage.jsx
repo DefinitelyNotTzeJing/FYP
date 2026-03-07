@@ -24,7 +24,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
   const { profile, loading: profileLoading, updateProfile } = useProfile(token);
   const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useMyReviews(token);
 
-  const savedAvatarUrl = profile?.profile?.profile_image_url || null;
+  const savedAvatarUrl = profile?.profile?.profile_image_base64 || null;
   const avatarSrc      = pendingImage || savedAvatarUrl;
   const initials       = user?.username ? user.username.slice(0, 2).toUpperCase() : "?";
 
@@ -41,7 +41,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
 
   async function handleSave(formData) {
     const payload = { ...formData };
-    if (pendingImage) payload.profile_image_url = pendingImage;
+    if (pendingImage) payload.profile_image_base64 = pendingImage;
     await updateProfile(payload);
     setPendingImage(null);
   }

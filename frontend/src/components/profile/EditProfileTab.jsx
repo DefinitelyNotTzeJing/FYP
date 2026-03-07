@@ -16,7 +16,7 @@ export default function EditProfileTab({ profile, onSave, pendingImage }) {
                            : "",
       gender:            profile.profile?.gender         || "",
       payment_method:    profile.profile?.payment_method || "",
-      profile_image_url: profile.profile?.profile_image_url || "",
+      profile_image_base64: profile.profile?.profile_image_base64 || "",
     });
   }, [profile]);
 

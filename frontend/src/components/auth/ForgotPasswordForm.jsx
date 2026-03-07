@@ -97,12 +97,11 @@ function StepOtp({ email, onNext }) {
         We sent a 6-digit code to <strong>{email}</strong>. Enter it below.
       </p>
       {error && <div className="auth-alert auth-alert--error">{error}</div>}
-      <div className="otp-row">
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem" }}>
         {otp.map((digit, i) => (
           <input
             key={i}
             ref={(el) => (inputs.current[i] = el)}
-            className="otp-input"
             type="text"
             inputMode="numeric"
             maxLength={1}
@@ -110,6 +109,13 @@ function StepOtp({ email, onNext }) {
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             autoFocus={i === 0}
+            style={{
+              width: "2.75rem", height: "3rem",
+              textAlign: "center", fontSize: "1.25rem", fontWeight: 600,
+              border: "1.5px solid var(--border)", borderRadius: "8px",
+              background: "var(--white)", fontFamily: "var(--font-body)",
+              outline: "none", caretColor: "var(--accent)",
+            }}
           />
         ))}
       </div>

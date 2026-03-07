@@ -38,7 +38,7 @@ class UserProfileController extends Controller
                     'profile' => [
                         'user_id' => $profile->user_id,
                         'username' => $user->username, // Include username from User model for easier access
-                        'profile_image_url' => $profile->profile_image_url,
+                        'profile_image_base64' => $profile->profile_image_base64,
                         'date_of_birth' => $profile->date_of_birth,
                         'gender' => $profile->gender,
                         'payment_method' => $profile->payment_method,
@@ -82,7 +82,7 @@ class UserProfileController extends Controller
                 'username' => 'sometimes|string|max:100|unique:users,username,' . $user->user_id . ',user_id',
                 
                 // UserProfile table fields
-                'profile_image_url' => 'sometimes|nullable|url',
+                'profile_image_base64' => 'sometimes|nullable|string',
                 'date_of_birth' => 'sometimes|nullable|date',
                 'gender' => 'sometimes|nullable|in:M,F,Other',
                 'payment_method' => 'sometimes|nullable|string|max:50',
@@ -118,7 +118,7 @@ class UserProfileController extends Controller
                     ],
                     'profile' => [
                         'user_id' => $profile->user_id,
-                        'profile_image_url' => $profile->profile_image_url,
+                        'profile_image_base64' => $profile->profile_image_base64,
                         'date_of_birth' => $profile->date_of_birth,
                         'gender' => $profile->gender,
                         'payment_method' => $profile->payment_method,

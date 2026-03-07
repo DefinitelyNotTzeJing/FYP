@@ -240,4 +240,31 @@ class FaceRecognitionController extends Controller
             'registered_at' => $user->face_registered_at,
         ]);
     }
+
+    /**
+     * Real-time pose check during capture
+     * Public endpoint — called mid-capture from frontend
+     * Expects: { frame: base64 }
+     */
+    public function checkPose(Request $request)
+    {
+        $request->validate([
+            'frame' => 'required|string',
+        ]);
+
+        try {
+            $response = Http::timeout(10)->post($this->pythonApiUrl . '/check-pose', [
+                'frame' => $request->frame,
+            ]);
+
+            return response()->json($response->json(), $response->status());
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'has_pose' => false,
+                'message'  => 'Pose check failed: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

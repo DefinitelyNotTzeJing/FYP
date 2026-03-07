@@ -12,7 +12,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->primary();
             $table->foreign('user_id')->references('user_id')->on('users')->onDelete('cascade');
             
-            $table->string('profile_image_url')->nullable();
+            $table->longText('profile_image_base64')->nullable();
             $table->date('date_of_birth')->nullable();
             $table->enum('gender', ['M', 'F', 'Other'])->nullable();
             $table->string('payment_method')->nullable();
