@@ -8,7 +8,16 @@ import { useWishlist, useCart, useProfile } from "../hooks/useProfile";
 import { useAuth } from "../context/AuthContext";
 import "../styles/HomePage.css";
 
-export default function HomePage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
+export default function HomePage({ 
+  onNavigateHome, 
+  onNavigateToAuth, 
+  onNavigateToProfile, 
+  onNavigateToWishlist, 
+  onNavigateToOrders, 
+  onNavigateToCart, 
+  onNavigateToReviews,
+  onNavigateToAdmin, }) 
+  {
   const { token } = useAuth();
   const { profile } = useProfile(token);
   const profileImage = profile?.profile?.profile_image_base64 || null;
@@ -62,6 +71,7 @@ export default function HomePage({ onNavigateHome, onNavigateToAuth, onNavigateT
         onNavigateToReviews={onNavigateToReviews}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}
+        onNavigateToAdmin={onNavigateToAdmin}
       />
 
       <main className="home">

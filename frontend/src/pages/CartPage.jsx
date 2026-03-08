@@ -2,7 +2,7 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/nav/Navbar";
 import { useCart, useProfile } from "../hooks/useProfile";
 
-export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToCheckout }) {
+export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToCheckout, onNavigateToAdmin }) {
   const { token } = useAuth();
   const { items, loading, remove, update, clear, totalQty } = useCart(token);
   const { profile } = useProfile(token);
@@ -22,6 +22,7 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToAdmin={onNavigateToAdmin}
         cartCount={totalQty}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}
@@ -57,7 +58,6 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                     background: "var(--white)", border: "1px solid var(--border)",
                     borderRadius: "10px", padding: "1rem 1.25rem",
                   }}>
-                    {/* Cover */}
                     <div style={{ width: 60, height: 80, borderRadius: "4px", overflow: "hidden", background: "var(--paper-dark)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "0.7rem", color: "var(--muted)", fontFamily: "var(--font-display)", textAlign: "center" }}>
                       {book.cover_image_url
                         ? <img src={book.cover_image_url} alt={book.book_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
@@ -65,7 +65,6 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                       }
                     </div>
 
-                    {/* Info */}
                     <div>
                       <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.95rem", marginBottom: "0.2rem" }}>{book.book_name}</div>
                       <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginBottom: "0.5rem" }}>{book.author?.name}</div>
@@ -77,7 +76,6 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                       )}
                     </div>
 
-                    {/* Qty + remove */}
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                         <button
@@ -100,7 +98,6 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
               })}
             </div>
 
-            {/* Summary */}
             <div style={{ background: "var(--white)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem 1.5rem" }}>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem", fontSize: "0.9rem", color: "var(--muted)" }}>
                 <span>{totalQty} item{totalQty !== 1 ? "s" : ""}</span>

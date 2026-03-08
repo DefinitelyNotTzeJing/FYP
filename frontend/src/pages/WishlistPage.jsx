@@ -3,7 +3,7 @@ import Navbar from "../components/nav/Navbar";
 import WishlistTab from "../components/tabs/WishlistTab";
 import { useWishlist, useProfile } from "../hooks/useProfile";
 
-export default function WishlistPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
+export default function WishlistPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToAdmin }) {
   const { token } = useAuth();
   const { items, loading, remove, clear } = useWishlist(token);
   const { profile } = useProfile(token);
@@ -19,6 +19,7 @@ export default function WishlistPage({ onNavigateHome, onNavigateToAuth, onNavig
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToAdmin={onNavigateToAdmin}
         wishlistCount={items.length}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}

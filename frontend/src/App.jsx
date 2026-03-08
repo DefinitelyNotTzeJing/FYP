@@ -7,6 +7,7 @@ import WishlistPage from "./pages/WishlistPage";
 import OrdersPage from "./pages/OrdersPage";
 import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
+import AdminPage from "./pages/admin/AdminPage";
 import "./styles/global.css";
 
 function AppRoutes() {
@@ -23,7 +24,7 @@ function AppRoutes() {
   }
 
   if (user  && page === "auth") setPage("home");
-  if (!user && ["profile","wishlist","orders","cart","reviews"].includes(page)) setPage("home");
+  if (!user && ["profile","wishlist","orders","cart","reviews","admin"].includes(page)) setPage("home");
 
   const nav = {
     onNavigateHome:       () => setPage("home"),
@@ -34,14 +35,16 @@ function AppRoutes() {
     onNavigateToCart:     () => setPage("cart"),
     onNavigateToCheckout: () => setPage("checkout"),
     onNavigateToReviews:  () => { setProfileTab("reviews"); setPage("profile"); },
+    onNavigateToAdmin:    () => setPage("admin"),
   };
 
   if (page === "auth")     return <AuthPage     onNavigateHome={nav.onNavigateHome} />;
   if (page === "profile")  return <ProfilePage  {...nav} initialTab={profileTab} />;
   if (page === "wishlist") return <WishlistPage {...nav} />;
   if (page === "orders")   return <OrdersPage   {...nav} />;
-  if (page === "cart")     return <CartPage     {...nav} />
+  if (page === "cart")     return <CartPage     {...nav} />;
   if (page === "checkout") return <CheckoutPage {...nav} />;
+  if (page === "admin")    return <AdminPage    {...nav} />;
 
   return <HomePage {...nav} />;
 }

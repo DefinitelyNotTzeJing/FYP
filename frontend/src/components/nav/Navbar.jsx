@@ -8,6 +8,7 @@ export default function Navbar({
   onNavigateToWishlist, onNavigateToOrders,
   onNavigateToCart, onNavigateToReviews,
   onNavigateHome,
+  onNavigateToAdmin,
   cartCount = 0, wishlistCount = 0,
   profileImage = null,
 }) {
@@ -49,6 +50,11 @@ export default function Navbar({
         )}
 
         <div className="navbar__actions">
+          {user?.is_admin && (
+            <button onClick={onNavigateToAdmin} className="nav-link">
+              Admin
+            </button>
+          )}
           {/* User dropdown / Sign in */}
           {user ? (
             <div className="navbar__user-menu" ref={dropdownRef}>

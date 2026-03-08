@@ -15,7 +15,7 @@ const TABS = [
   { key: "face",     label: "Face Login" },
 ];
 
-export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, initialTab = "profile" }) {
+export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToAdmin, initialTab = "profile" }) {
   const { user, token } = useAuth();
   const [tab, setTab]                   = useState(initialTab);
   const [pendingImage, setPendingImage] = useState(null);
@@ -40,7 +40,6 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
   }
 
   async function handleSave(formData) {
-    // Remove profile_image_base64 from form data — image is handled separately via pendingImage
     const { profile_image_base64, ...rest } = formData;
     const payload = { ...rest };
     if (pendingImage) payload.profile_image_base64 = pendingImage;
@@ -58,6 +57,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToAdmin={onNavigateToAdmin}
         profileImage={pendingImage || savedAvatarUrl}
         onNavigateHome={onNavigateHome}
       />
@@ -65,7 +65,6 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
       <div className="profile-page">
         <input ref={fileRef} type="file" accept="image/*" style={{ display: "none" }} onChange={handleFileChange} />
 
-        {/* Header */}
         <div className="profile-header">
           <div
             className="profile-avatar profile-avatar--clickable"
@@ -88,7 +87,6 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
           </div>
         </div>
 
-        {/* Tabs */}
         <div className="profile-tabs">
           {TABS.map((t) => (
             <button
@@ -106,7 +104,6 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
           ))}
         </div>
 
-        {/* Tab content */}
         {tab === "profile"  && (profileLoading ? <div className="profile-loading">Loading profile…</div> : <EditProfileTab profile={profile} onSave={handleSave} pendingImage={pendingImage} />)}
         {tab === "reviews"  && <ReviewsTab reviews={reviews} loading={reviewsLoading} onRefresh={refreshReviews} />}
         {tab === "password" && <ChangePasswordTab />}
