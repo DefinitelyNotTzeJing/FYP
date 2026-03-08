@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { apiFetch } from "../../utils/api";
 import Navbar from "../../components/nav/Navbar";
@@ -60,6 +60,112 @@ function SearchBar({ value, onChange, placeholder }) {
       <span style={{ position: "absolute", left: "0.7rem", top: "50%", transform: "translateY(-50%)", color: "var(--muted)", pointerEvents: "none" }}>⌕</span>
       <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         style={{ ...S.input, paddingLeft: "2rem" }} />
+    </div>
+  );
+}
+
+
+// ── AuthorCombobox ─────────────────────────────────────────────────────────
+function AuthorCombobox({ authors, value, onChange }) {
+  // value = author_id (number/string), onChange(id, name)
+  const selected   = authors.find((a) => String(a.author_id) === String(value));
+  const [input, setInput]   = useState(selected?.name || "");
+  const [open, setOpen]     = useState(false);
+  const [focused, setFocused] = useState(false);
+  const wrapRef = useRef();
+
+  // Sync input text when form is reset or populated (edit mode)
+  useEffect(() => {
+    setInput(selected?.name || "");
+  }, [value]); // eslint-disable-line
+
+  // Close on outside click
+  useEffect(() => {
+    function handler(e) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+        setFocused(false);
+        // If user typed but didn't pick, revert to last valid selection
+        if (!selected) setInput("");
+        else setInput(selected.name);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [selected]);
+
+  const filtered = input.trim()
+    ? authors.filter((a) => a.name.toLowerCase().includes(input.toLowerCase()))
+    : authors;
+
+  function pick(author) {
+    onChange(author.author_id, author.name);
+    setInput(author.name);
+    setOpen(false);
+  }
+
+  function handleInput(e) {
+    setInput(e.target.value);
+    setOpen(true);
+    // If cleared, unset author_id
+    if (!e.target.value) onChange("", "");
+  }
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative" }}>
+      <input
+        style={{
+          ...S.input,
+          borderColor: open && focused ? "var(--ink)" : "var(--border)",
+        }}
+        value={input}
+        onChange={handleInput}
+        onFocus={() => { setFocused(true); setOpen(true); }}
+        placeholder="Type to search authors…"
+        autoComplete="off"
+      />
+      {/* Selected badge */}
+      {selected && String(selected.author_id) === String(value) && (
+        <span style={{
+          position: "absolute", right: "0.6rem", top: "50%", transform: "translateY(-50%)",
+          fontSize: "0.7rem", background: "var(--paper)", color: "var(--muted)",
+          padding: "1px 6px", borderRadius: "4px", pointerEvents: "none",
+        }}>✓</span>
+      )}
+      {open && filtered.length > 0 && (
+        <div style={{
+          position: "absolute", zIndex: 100, top: "calc(100% + 4px)", left: 0, right: 0,
+          background: "var(--white)", border: "1.5px solid var(--border)", borderRadius: "8px",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.1)", maxHeight: 220, overflowY: "auto",
+        }}>
+          {filtered.map((a) => (
+            <div
+              key={a.author_id}
+              onMouseDown={(e) => { e.preventDefault(); pick(a); }}
+              style={{
+                padding: "0.55rem 0.85rem", fontSize: "0.87rem", cursor: "pointer",
+                background: String(a.author_id) === String(value) ? "var(--paper)" : "transparent",
+                fontWeight: String(a.author_id) === String(value) ? 600 : 400,
+                display: "flex", alignItems: "center", gap: "0.5rem",
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper)"}
+              onMouseLeave={(e) => e.currentTarget.style.background = String(a.author_id) === String(value) ? "var(--paper)" : "transparent"}
+            >
+              <span style={{ width: 24, height: 24, borderRadius: "50%", overflow: "hidden", background: "var(--paper-dark)", display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: "0.65rem", color: "var(--muted)", flexShrink: 0 }}>
+                {a.image_url
+                  ? <img src={a.image_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : a.name?.slice(0, 2)
+                }
+              </span>
+              {a.name}
+              {String(a.author_id) === String(value) && <span style={{ marginLeft: "auto", color: "var(--accent)", fontSize: "0.75rem" }}>✓</span>}
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ padding: "0.65rem 0.85rem", fontSize: "0.85rem", color: "var(--muted)" }}>No authors found</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -144,10 +250,11 @@ function BooksTab({ token }) {
           <div style={{ ...S.row, gridTemplateColumns: "1fr 1fr" }}>
             <div>
               <label style={S.label}>Author *</label>
-              <select style={S.input} value={f.author_id || ""} onChange={(e) => setForm({ ...f, author_id: e.target.value })}>
-                <option value="">Select author…</option>
-                {authors.map((a) => <option key={a.author_id} value={a.author_id}>{a.name}</option>)}
-              </select>
+              <AuthorCombobox
+                authors={authors}
+                value={f.author_id || ""}
+                onChange={(id) => setForm({ ...f, author_id: id })}
+              />
             </div>
             <div>
               <label style={S.label}>Category *</label>
