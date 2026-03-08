@@ -22,10 +22,9 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
   const fileRef = useRef();
 
   const { profile, loading: profileLoading, updateProfile } = useProfile(token);
-  const profileImage = pendingImage || profile?.profile?.profile_image_base64 || null;
   const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useMyReviews(token);
 
-  const savedAvatarUrl = profile?.profile?.profile_image_url || null;
+  const savedAvatarUrl = profile?.profile?.profile_image_base64 || null;
   const avatarSrc      = pendingImage || savedAvatarUrl;
   const initials       = user?.username ? user.username.slice(0, 2).toUpperCase() : "?";
 
@@ -41,8 +40,10 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
   }
 
   async function handleSave(formData) {
-    const payload = { ...formData };
-    if (pendingImage) payload.profile_image_url = pendingImage;
+    // Remove profile_image_base64 from form data — image is handled separately via pendingImage
+    const { profile_image_base64, ...rest } = formData;
+    const payload = { ...rest };
+    if (pendingImage) payload.profile_image_base64 = pendingImage;
     await updateProfile(payload);
     setPendingImage(null);
   }
@@ -57,7 +58,6 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
-        profileImage={profileImage}
       />
 
       <div className="profile-page">
