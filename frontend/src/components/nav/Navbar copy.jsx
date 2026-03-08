@@ -8,7 +8,6 @@ export default function Navbar({
   onNavigateToWishlist, onNavigateToOrders,
   onNavigateToCart, onNavigateToReviews,
   cartCount = 0, wishlistCount = 0,
-  profileImage = null,
 }) {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -55,11 +54,8 @@ export default function Navbar({
                 className="navbar__user-btn"
                 onClick={() => setDropdownOpen((v) => !v)}
               >
-                <span className="navbar__avatar" style={{ overflow: "hidden", padding: 0 }}>
-                  {profileImage
-                    ? <img src={profileImage} alt={user.username} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                    : user.username?.slice(0, 2).toUpperCase()
-                  }
+                <span className="navbar__avatar">
+                  {user.username?.slice(0, 2).toUpperCase()}
                 </span>
                 <span className="navbar__username">{user.username}</span>
                 <span className="navbar__chevron">{dropdownOpen ? "▲" : "▼"}</span>

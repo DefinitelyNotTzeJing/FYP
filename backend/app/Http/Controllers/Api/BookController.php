@@ -50,7 +50,7 @@ class BookController extends Controller
 
             $sortBy = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
-            $allowedSorts = ['created_at', 'price', 'book_name', 'book_total_rating', 'book_number_of_rating'];
+            $allowedSorts = ['created_at', 'price', 'book_name', 'book_total_rating', 'book_number_of_rating', 'is_featured'];
             if (in_array($sortBy, $allowedSorts)) {
                 $query->orderBy($sortBy, $sortOrder);
             }

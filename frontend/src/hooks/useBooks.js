@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { apiFetch } from "../utils/api";
 
-export function useBooks({ search, selectedCategory, sortBy, sortOrder, page }) {
+export function useBooks({ search, selectedCategory, sortBy, sortOrder, page, showFeatured }) {
   const [books, setBooks]         = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading]     = useState(true);
@@ -11,12 +11,15 @@ export function useBooks({ search, selectedCategory, sortBy, sortOrder, page }) 
     setLoading(true);
     setError(null);
 
+    // "featured__desc" sorts all books with featured ones first
+    const isFeaturedSort = sortBy === "featured";
     const params = new URLSearchParams({
       per_page: 12,
       page,
-      sort_by: sortBy,
-      sort_order: sortOrder,
+      sort_by: isFeaturedSort ? "is_featured" : sortBy,
+      sort_order: "desc",
     });
+    if (!isFeaturedSort) params.set("sort_order", sortOrder);
     if (search) {
       params.set("search", search);        // search by book title
       params.set("author", search);        // search by author name

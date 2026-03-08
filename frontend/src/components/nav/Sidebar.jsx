@@ -22,7 +22,9 @@ export default function Sidebar({
           <option value="price__desc">Price: High to Low</option>
           <option value="book_name__asc">Title A–Z</option>
           <option value="book_total_rating__desc">Top Rated</option>
+          <option value="featured__desc">Featured ⭐</option>
         </select>
+
       </div>
       <div className="sidebar__section">
         <div className="sidebar__title">Categories</div>
