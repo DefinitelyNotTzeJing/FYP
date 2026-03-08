@@ -122,12 +122,10 @@ class PaymentController extends Controller
     public function verifyPaymentWithFace(Request $request)
     {
         $request->validate([
-            'frames'           => 'required|array|min:5',
-            'frames.*'         => 'required|string',
-            'challenge_type'   => 'nullable|string|in:turn_left,turn_right,look_up,look_down',
-            'payment_method'   => 'required|string|in:Credit Card,Debit Card,PayPal,Cash on Delivery',
+            'image' => 'required|string',
+            'payment_method' => 'required|string|in:Credit Card,Debit Card,PayPal,Cash on Delivery',
             'shipping_address' => 'nullable|string',
-            'notes'            => 'nullable|string',
+            'notes' => 'nullable|string'
         ]);
 
         $user = $request->user();
@@ -142,16 +140,11 @@ class PaymentController extends Controller
         }
 
         try {
-            // Decode stored embedding
-            $storedEmbedding = is_string($user->face_embedding)
-                ? json_decode($user->face_embedding, true)
-                : $user->face_embedding;
-
-            // Call Flask face service with liveness detection
-            $response = Http::timeout(30)->post('http://localhost:5000/verify', [
-                'frames'           => $request->frames,
-                'stored_embedding' => $storedEmbedding,
-                'challenge_type'   => $request->challenge_type,
+            // Call Python API for face verification
+            $response = Http::timeout(10)->post('http://localhost:5000/verify-face', [
+                'image' => $request->image,
+                'stored_embedding' => $user->face_embedding,
+                'threshold' => 0.6
             ]);
 
             if (!$response->successful()) {
@@ -162,37 +155,39 @@ class PaymentController extends Controller
                 ], 503);
             }
 
-            $result = $response->json();
+            $verificationResult = $response->json();
 
-            if (!($result['success'] ?? false)) {
+            // Check if face matches (threshold: 0.6)
+            if (!$verificationResult['match'] || $verificationResult['similarity'] < 0.6) {
                 return response()->json([
-                    'success'   => false,
-                    'error'     => 'Face verification failed',
-                    'message'   => $result['message'] ?? 'Liveness or face match failed. Please try again.',
-                    'liveness'  => $result['liveness'] ?? false,
-                    'match'     => $result['match'] ?? false,
-                    'similarity'=> $result['similarity'] ?? null,
+                    'success' => false,
+                    'error' => 'Face verification failed',
+                    'message' => 'Face does not match. Please try again or use password authentication',
+                    'similarity' => $verificationResult['similarity']
                 ], 401);
             }
 
-            return $this->processPayment(
+            // Process payment with face verification data
+            $result = $this->processPayment(
                 $user,
                 'facial_recognition',
                 $request->payment_method,
                 $request->shipping_address,
                 $request->notes,
-                $result['similarity'] ?? null
+                $verificationResult['similarity']
             );
 
+            return $result;
+
         } catch (\Exception $e) {
-            Log::error('Face checkout verification failed', [
-                'error'   => $e->getMessage(),
-                'user_id' => $user->user_id,
+            Log::error('Face verification failed', [
+                'error' => $e->getMessage(),
+                'user_id' => $user->user_id
             ]);
 
             return response()->json([
                 'success' => false,
-                'error'   => 'Face verification error',
+                'error' => 'Face verification error',
                 'message' => 'An error occurred during face verification. Please try again or use password authentication'
             ], 500);
         }
@@ -238,12 +233,9 @@ class PaymentController extends Controller
             }
 
             // Calculate total
-            $subtotal = $cartItems->sum(function ($item) {
+            $totalAmount = $cartItems->sum(function ($item) {
                 return $item->quantity * $item->book->price;
             });
-            $shippingFee = 5.00;
-            $tax         = $subtotal * 0.06;
-            $totalAmount = $subtotal + $shippingFee + $tax;
 
             // Use user's address if not provided
             if (is_null($shippingAddress) && $user->profile) {

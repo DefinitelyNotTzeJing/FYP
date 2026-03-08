@@ -6,7 +6,6 @@ import ProfilePage from "./pages/ProfilePage";
 import WishlistPage from "./pages/WishlistPage";
 import OrdersPage from "./pages/OrdersPage";
 import CartPage from "./pages/CartPage";
-import CheckoutPage from "./pages/CheckoutPage";
 import "./styles/global.css";
 
 function AppRoutes() {
@@ -32,7 +31,6 @@ function AppRoutes() {
     onNavigateToWishlist: () => setPage("wishlist"),
     onNavigateToOrders:   () => setPage("orders"),
     onNavigateToCart:     () => setPage("cart"),
-    onNavigateToCheckout: () => setPage("checkout"),
     onNavigateToReviews:  () => { setProfileTab("reviews"); setPage("profile"); },
   };
 
@@ -40,8 +38,7 @@ function AppRoutes() {
   if (page === "profile")  return <ProfilePage  {...nav} initialTab={profileTab} />;
   if (page === "wishlist") return <WishlistPage {...nav} />;
   if (page === "orders")   return <OrdersPage   {...nav} />;
-  if (page === "cart")     return <CartPage     {...nav} />
-  if (page === "checkout") return <CheckoutPage {...nav} />;
+  if (page === "cart")     return <CartPage     {...nav} />;
 
   return <HomePage {...nav} />;
 }

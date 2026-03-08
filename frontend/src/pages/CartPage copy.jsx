@@ -2,7 +2,7 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/nav/Navbar";
 import { useCart } from "../hooks/useProfile";
 
-export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToCheckout }) {
+export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
   const { token } = useAuth();
   const { items, loading, remove, update, clear, totalQty } = useCart(token);
 
@@ -107,7 +107,7 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                 <span style={{ color: "var(--accent)" }}>RM {total.toFixed(2)}</span>
               </div>
               <div style={{ display: "flex", gap: "0.75rem" }}>
-                <button onClick={onNavigateToCheckout} style={{ flex: 1, padding: "0.75rem", background: "var(--accent)", color: "white", border: "none", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.95rem", fontWeight: 500, cursor: "pointer" }}>
+                <button onClick={onNavigateToOrders} style={{ flex: 1, padding: "0.75rem", background: "var(--accent)", color: "white", border: "none", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.95rem", fontWeight: 500, cursor: "pointer" }}>
                   Checkout
                 </button>
                 <button onClick={clear} style={{ padding: "0.75rem 1rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", cursor: "pointer", color: "var(--muted)" }}>
