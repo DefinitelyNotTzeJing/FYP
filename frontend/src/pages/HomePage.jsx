@@ -8,7 +8,7 @@ import { useWishlist, useCart, useProfile } from "../hooks/useProfile";
 import { useAuth } from "../context/AuthContext";
 import "../styles/HomePage.css";
 
-export default function HomePage({ onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
+export default function HomePage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews }) {
   const { token } = useAuth();
   const { profile } = useProfile(token);
   const profileImage = profile?.profile?.profile_image_base64 || null;
@@ -36,7 +36,7 @@ export default function HomePage({ onNavigateToAuth, onNavigateToProfile, onNavi
 
   const handleCategory = (id) => { setSelectedCategory(id); setPage(1); };
   const handleSort     = (val) => { setSortValue(val); setPage(1); };
-  const handleLogoClick = () => { setSearchInput(""); setSearch(""); setSelectedCategory(null); setPage(1); };
+  const handleLogoClick = () => { setSearchInput(""); setSearch(""); setSelectedCategory(null); setPage(1); onNavigateHome?.(); };
 
   const totalPages = pagination?.last_page || 1;
 
@@ -61,6 +61,7 @@ export default function HomePage({ onNavigateToAuth, onNavigateToProfile, onNavi
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
         profileImage={profileImage}
+        onNavigateHome={onNavigateHome}
       />
 
       <main className="home">

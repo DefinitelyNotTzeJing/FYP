@@ -7,6 +7,7 @@ export default function Navbar({
   onNavigateToAuth, onNavigateToProfile,
   onNavigateToWishlist, onNavigateToOrders,
   onNavigateToCart, onNavigateToReviews,
+  onNavigateHome,
   cartCount = 0, wishlistCount = 0,
   profileImage = null,
 }) {
@@ -99,7 +100,7 @@ export default function Navbar({
 
                   <div className="navbar__dropdown-divider" />
 
-                  <button className="navbar__dropdown-item navbar__dropdown-item--danger" onClick={() => go(logout)}>
+                  <button className="navbar__dropdown-item navbar__dropdown-item--danger" onClick={() => { go(logout); onNavigateHome?.(); }}>
                     ↩ Sign Out
                   </button>
                 </div>

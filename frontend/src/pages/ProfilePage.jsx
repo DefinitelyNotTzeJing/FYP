@@ -58,6 +58,8 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        profileImage={pendingImage || savedAvatarUrl}
+        onNavigateHome={onNavigateHome}
       />
 
       <div className="profile-page">

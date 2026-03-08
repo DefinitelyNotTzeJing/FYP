@@ -1,10 +1,12 @@
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/nav/Navbar";
-import { useCart } from "../hooks/useProfile";
+import { useCart, useProfile } from "../hooks/useProfile";
 
 export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToCheckout }) {
   const { token } = useAuth();
   const { items, loading, remove, update, clear, totalQty } = useCart(token);
+  const { profile } = useProfile(token);
+  const profileImage = profile?.profile?.profile_image_base64 || null;
 
   const total = items.reduce((sum, i) => {
     return sum + parseFloat(i.book?.price || 0) * (i.quantity || 1);
@@ -21,6 +23,8 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
         cartCount={totalQty}
+        profileImage={profileImage}
+        onNavigateHome={onNavigateHome}
       />
 
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "2.5rem 2rem" }}>
