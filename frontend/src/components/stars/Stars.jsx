@@ -7,7 +7,7 @@ export default function Stars({ rating, count }) {
           {i <= filled ? "★" : "☆"}
         </span>
       ))}
-      {count > 0 && <span>({count})</span>}
+      <span>({count ?? 0})</span>
     </span>
   );
 }
