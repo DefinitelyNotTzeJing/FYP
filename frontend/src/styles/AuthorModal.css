@@ -1,0 +1,219 @@
+.author-modal__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.author-modal {
+  background: var(--white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
+.author-modal__close {
+  position: sticky;
+  top: 1rem;
+  float: right;
+  margin: 1rem 1rem 0 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  cursor: pointer;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.author-modal__close:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.author-modal__header {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  padding: 1.75rem 1.75rem 1.25rem;
+  clear: both;
+}
+
+.author-modal__avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.author-modal__avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-modal__label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.25rem;
+}
+
+.author-modal__name {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 0.5rem;
+}
+
+.author-modal__bio {
+  font-size: 0.87rem;
+  color: var(--muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.author-modal__section {
+  padding: 0 1.75rem 1.75rem;
+  border-top: 1px solid var(--border);
+  margin-top: 0.25rem;
+  padding-top: 1.25rem;
+}
+
+.author-modal__section-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.author-modal__count {
+  background: var(--paper-dark);
+  color: var(--ink);
+  font-size: 0.7rem;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.author-modal__loading,
+.author-modal__empty {
+  font-size: 0.88rem;
+  color: var(--muted);
+  padding: 1.5rem 0;
+  text-align: center;
+}
+
+.author-modal__books {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.author-modal__book {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.author-modal__book:hover {
+  background: var(--paper);
+  border-color: var(--ink);
+}
+
+.author-modal__book-cover {
+  width: 40px;
+  height: 54px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--paper-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-family: var(--font-display);
+  color: var(--muted);
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.author-modal__book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.author-modal__book-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.author-modal__book-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--ink);
+  margin-bottom: 0.15rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.author-modal__book-category {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-bottom: 0.3rem;
+}
+
+.author-modal__book-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.author-modal__book-price {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.author-modal__book-chevron {
+  font-size: 1.1rem;
+  color: var(--muted);
+  flex-shrink: 0;
+}

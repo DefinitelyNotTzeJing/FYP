@@ -1,12 +1,17 @@
 import { useState, useEffect } from "react";
+import { apiFetch } from "../utils/api";
 import Navbar from "../components/nav/Navbar";
 import Sidebar from "../components/nav/Sidebar";
 import BookCard from "../components/common/BookCard";
 import BookModal from "../components/common/BookModal";
 import { useBooks, useCategories } from "../hooks/useBooks";
+import AuthorCard from "../components/common/AuthorCard";
+import AuthorModal from "../components/common/AuthorModal";
 import { useWishlist, useCart, useProfile } from "../hooks/useProfile";
 import { useAuth } from "../context/AuthContext";
 import "../styles/HomePage.css";
+import "../styles/AuthorCard.css";
+import "../styles/AuthorModal.css";
 
 export default function HomePage({ 
   onNavigateHome, 
@@ -27,6 +32,8 @@ export default function HomePage({
   const [sortValue, setSortValue] = useState("created_at__desc");
   const [page, setPage] = useState(1);
   const [selectedBook, setSelectedBook] = useState(null);
+  const [authors, setAuthors] = useState([]);
+  const [selectedAuthor, setSelectedAuthor] = useState(null);
 
   const [sortBy, sortOrder] = sortValue.split("__");
   const categories = useCategories();
@@ -42,6 +49,14 @@ export default function HomePage({
     const t = setTimeout(() => { setSearch(searchInput); setPage(1); }, 400);
     return () => clearTimeout(t);
   }, [searchInput]);
+
+  // Fetch matching authors when searching
+  useEffect(() => {
+    if (!search.trim()) { setAuthors([]); return; }
+    apiFetch(`/authors?search=${encodeURIComponent(search)}&per_page=3`)
+      .then((d) => setAuthors(d.data?.data || d.data || []))
+      .catch(() => setAuthors([]));
+  }, [search]);
 
   const handleCategory = (id) => { setSelectedCategory(id); setPage(1); };
   const handleSort     = (val) => { setSortValue(val); setPage(1); };
@@ -90,6 +105,18 @@ export default function HomePage({
               {pagination && <span className="home__count">{pagination.total} books</span>}
             </div>
 
+            {/* Author results — only shown when searching */}
+            {search && authors.length > 0 && (
+              <div className="author-results">
+                <div className="author-results__title">Authors</div>
+                <div className="author-results__list">
+                  {authors.map((a) => (
+                    <AuthorCard key={a.author_id} author={a} onClick={setSelectedAuthor} />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {error && <div className="state-error">⚠ {error}</div>}
 
             {loading ? (
@@ -122,6 +149,14 @@ export default function HomePage({
           </div>
         </div>
       </main>
+
+      {selectedAuthor && (
+        <AuthorModal
+          author={selectedAuthor}
+          onClose={() => setSelectedAuthor(null)}
+          onBookClick={setSelectedBook}
+        />
+      )}
 
       {selectedBook && (
         <BookModal
