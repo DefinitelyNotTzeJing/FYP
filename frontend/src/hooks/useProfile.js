@@ -172,7 +172,7 @@ export function useMyReviews(token) {
 
   const fetch_ = useCallback(() => {
     if (!token) return;
-    apiFetch("/reviews/my", { headers: { Authorization: `Bearer ${token}` } })
+    apiFetch("/my-reviews", { headers: { Authorization: `Bearer ${token}` } })
       .then((d) => { setReviews(d.data || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, [token]);

@@ -40,11 +40,11 @@ export default function ReviewsTab({ reviews, loading, onRefresh }) {
     setSaveMsg(null);
   }
 
-  async function submitEdit(reviewId) {
+  async function submitEdit(bookId) {
     setSaving(true);
     setSaveMsg(null);
     try {
-      await apiFetch(`/reviews/${reviewId}`, {
+      await apiFetch(`/book-reviews/${bookId}`, {
         method: "PUT",
         headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({ score: editForm.score, comment: editForm.comment }),
@@ -133,7 +133,7 @@ export default function ReviewsTab({ reviews, loading, onRefresh }) {
                     />
                     <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.6rem" }}>
                       <button
-                        onClick={() => submitEdit(r.review_id)}
+                        onClick={() => submitEdit(r.book?.book_id || r.book_id)}
                         disabled={saving}
                         style={{ padding: "0.45rem 1rem", background: "var(--accent)", color: "white", border: "none", borderRadius: "6px", fontFamily: "var(--font-body)", fontSize: "0.85rem", cursor: saving ? "not-allowed" : "pointer" }}
                       >

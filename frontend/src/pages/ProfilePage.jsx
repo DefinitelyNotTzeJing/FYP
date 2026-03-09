@@ -56,7 +56,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
         onNavigateToWishlist={onNavigateToWishlist}
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
-        onNavigateToReviews={onNavigateToReviews}
+        onNavigateToReviews={() => setTab("reviews")}
         onNavigateToAdmin={onNavigateToAdmin}
         profileImage={pendingImage || savedAvatarUrl}
         onNavigateHome={onNavigateHome}
