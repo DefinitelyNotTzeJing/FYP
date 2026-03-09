@@ -36,18 +36,13 @@ export default function RegisterForm() {
       });
       login(data.user, data.token);
     } catch (err) {
-      // Try to parse Laravel validation errors
-      try {
-        const body = await err.response?.json?.();
-        if (body?.errors) {
-          const flat = {};
-          Object.entries(body.errors).forEach(([k, v]) => { flat[k] = v[0]; });
-          setFieldErrors(flat);
-        } else {
-          setError(body?.message || "Registration failed. Please try again.");
-        }
-      } catch {
-        setError("Registration failed. Please try again.");
+      const body = err.response;
+      if (body?.errors) {
+        const flat = {};
+        Object.entries(body.errors).forEach(([k, v]) => { flat[k] = v[0]; });
+        setFieldErrors(flat);
+      } else {
+        setError(body?.message || "Registration failed. Please try again.");
       }
     } finally {
       setLoading(false);

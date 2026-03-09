@@ -19,13 +19,8 @@
 
 6. admin account information: 
     admin username: admin
-    admin password: admin
+    admin password: password
     admin email: admin@bookstore.com
 
 7. if database goes boom:
     php artisan migrate:fresh --seed
-
-To do list
-1. relearn api and middleware from laravel tutorial
-2. do frontend
-    - login, register, edit profile, page routing, 
