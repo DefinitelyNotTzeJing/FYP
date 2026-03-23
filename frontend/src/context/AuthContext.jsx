@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from "react";
+import { API_BASE } from "../utils/api";
 
 const AuthContext = createContext(null);
 
@@ -7,11 +8,13 @@ export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem("token") || null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, restore user from token
   useEffect(() => {
     if (token) {
-      fetch("http://127.0.0.1:8000/api/user", {
-        headers: { Authorization: `Bearer ${token}` },
+      fetch(`${API_BASE}/user`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       })
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then((data) => setUser(data.user))
@@ -30,9 +33,12 @@ export function AuthProvider({ children }) {
 
   function logout() {
     if (token) {
-      fetch("http://127.0.0.1:8000/api/logout", {
+      fetch(`${API_BASE}/logout`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
       }).catch(() => {});
     }
     localStorage.removeItem("token");

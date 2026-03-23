@@ -92,7 +92,11 @@ setChallengeDone(false);
           try {
             const res = await fetch(`${API_BASE}/face/check-pose`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "Accept": "application/json" },
+              headers: { 
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+                "ngrok-skip-browser-warning": "true",
+              },
               body: JSON.stringify({ frame }),
             });
             const data = await res.json();
