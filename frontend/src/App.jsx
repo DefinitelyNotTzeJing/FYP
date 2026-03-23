@@ -9,6 +9,7 @@ import CartPage from "./pages/CartPage";
 import CheckoutPage from "./pages/CheckoutPage";
 import AdminPage from "./pages/admin/AdminPage";
 import "./styles/global.css";
+import PWAInstallBanner from "./components/common/PWAInstallBanner";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
@@ -53,6 +54,7 @@ export default function App() {
   return (
     <AuthProvider>
       <AppRoutes />
+      <PWAInstallBanner />
     </AuthProvider>
   );
 }

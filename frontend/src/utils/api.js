@@ -1,4 +1,11 @@
-export const API_BASE = "http://127.0.0.1:8000/api";
+const hostname = window.location.hostname;
+
+export const API_BASE = 
+  hostname === "localhost"
+    ? "http://127.0.0.1:8000/api"
+    : hostname === "192.168.0.223"
+    ? "http://192.168.0.223:8000/api"
+    : "https://lacey-nondisinterested-noninclusively.ngrok-free.dev/api";
 
 export async function apiFetch(endpoint, options = {}) {
   const { headers: extraHeaders, ...restOptions } = options;
@@ -8,6 +15,7 @@ export async function apiFetch(endpoint, options = {}) {
     headers: {
       "Content-Type": "application/json",
       "Accept": "application/json",
+      "ngrok-skip-browser-warning": "true",
       ...extraHeaders,
     },
   });

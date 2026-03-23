@@ -26,7 +26,12 @@ body {
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;         /* Prevent horizontal scroll on mobile */
 }
 
-button { cursor: pointer; }
-img { display: block; }
+button { 
+  cursor: pointer;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+img { display: block; max-width: 100%; }

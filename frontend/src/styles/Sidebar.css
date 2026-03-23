@@ -1,39 +1,37 @@
 .sidebar {
   position: sticky;
-  top: 88px;
+  top: 72px;
 }
 
 .sidebar__section {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .sidebar__title {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
 }
 
 .sidebar__category-btn {
   display: block;
   width: 100%;
   text-align: left;
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.65rem;
   border-radius: 6px;
   border: none;
   background: none;
   font-family: var(--font-body);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   color: var(--ink);
   transition: background 0.15s, color 0.15s;
   margin-bottom: 2px;
 }
 
-.sidebar__category-btn:hover {
-  background: var(--paper-dark);
-}
+.sidebar__category-btn:hover { background: var(--paper-dark); }
 
 .sidebar__category-btn--active {
   background: var(--accent-light);
@@ -43,25 +41,61 @@
 
 .sidebar__select {
   width: 100%;
-  padding: 0.45rem 0.75rem;
+  padding: 0.4rem 0.65rem;
   border: 1.5px solid var(--border);
   border-radius: 6px;
   font-family: var(--font-body);
-  font-size: 0.88rem;
+  font-size: 0.84rem;
   background: var(--white);
   color: var(--ink);
   outline: none;
   cursor: pointer;
 }
 
-@media (max-width: 768px) {
+/* ── Mobile: horizontal scrollable strip ── */
+@media (max-width: 640px) {
   .sidebar {
     position: static;
     display: flex;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.75rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    /* hide scrollbar but keep scroll */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .sidebar::-webkit-scrollbar { display: none; }
+
   .sidebar__section {
     margin-bottom: 0;
+    flex-shrink: 0;
+  }
+
+  .sidebar__title { display: none; }
+
+  .sidebar__category-btn {
+    white-space: nowrap;
+    padding: 0.35rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: var(--white);
+  }
+
+  .sidebar__category-btn--active {
+    background: var(--accent) !important;
+    color: white !important;
+    border-color: var(--accent) !important;
+  }
+  /* @media (max-width: 640px) {
+    .sidebar__category-btn--active {
+      background: var(--accent) !important;
+      color: white !important;
+      border-color: var(--accent) !important;
+    }
+  } */
+
+  .sidebar__select {
+    width: auto;
+    min-width: 140px;
   }
 }
