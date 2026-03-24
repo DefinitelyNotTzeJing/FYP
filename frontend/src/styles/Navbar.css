@@ -26,6 +26,15 @@
   cursor: pointer;
   user-select: none;
   flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.navbar__logo:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 4px;
+  border-radius: 4px;
 }
 
 .navbar__logo span {
@@ -63,9 +72,11 @@
   outline: none;
 }
 
-.navbar__search-input:focus {
+.navbar__search-input:focus,
+.navbar__search-input:focus-visible {
   border-color: var(--accent);
   background: var(--white);
+  outline: none;
 }
 
 /* ── Actions row ── */
@@ -97,6 +108,11 @@
   background: var(--paper-dark);
 }
 
+.navbar__action-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .nav-link {
   background: none;
   border: none;
@@ -114,9 +130,14 @@
   background: var(--paper-dark);
 }
 
+.nav-link:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .navbar__signin-btn {
   background: var(--ink);
-  color: var(--white) !important;
+  color: var(--white);
   padding: 0.4rem 0.85rem;
   border-radius: 7px;
   font-weight: 500;
@@ -127,8 +148,13 @@
 }
 
 .navbar__signin-btn:hover {
-  background: var(--accent) !important;
-  color: var(--white) !important;
+  background: var(--accent);
+  color: var(--white);
+}
+
+.navbar__signin-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* ── Badge ── */
@@ -179,6 +205,11 @@
 .navbar__user-btn:hover {
   border-color: var(--accent);
   background: var(--accent-light);
+}
+
+.navbar__user-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .navbar__avatar {
@@ -243,6 +274,12 @@
 }
 
 .navbar__dropdown-item:hover { background: var(--paper); }
+
+.navbar__dropdown-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: var(--paper);
+}
 .navbar__dropdown-item--danger { color: #c0392b; }
 .navbar__dropdown-item--danger:hover { background: #fef2f2; }
 

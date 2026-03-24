@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { AlertTriangle } from "lucide-react";
 import { apiFetch } from "../utils/api";
 import Navbar from "../components/nav/Navbar";
 import Sidebar from "../components/nav/Sidebar";
@@ -86,12 +87,12 @@ export default function HomePage({
         onNavigateToReviews={onNavigateToReviews}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}
-        onNavigateToAdmin={onNavigateToAdmin}
       />
 
       <main className="home">
         <div className="home__layout">
           <Sidebar
+            onNavigateToAdmin={onNavigateToAdmin}
             categories={categories}
             selectedCategory={selectedCategory}
             onCategoryChange={handleCategory}
@@ -99,7 +100,7 @@ export default function HomePage({
             onSortChange={handleSort}
           />
 
-          <div>
+          <div className="home__content">
             <div className="home__content-header">
               <h1 className="home__title">{pageTitle}</h1>
               {pagination && <span className="home__count">{pagination.total} books</span>}
@@ -108,7 +109,7 @@ export default function HomePage({
             {/* Author results — only shown when searching */}
             {search && authors.length > 0 && (
               <div className="author-results">
-                <div className="author-results__title">Authors</div>
+                <h2 className="author-results__title">Authors</h2>
                 <div className="author-results__list">
                   {authors.map((a) => (
                     <AuthorCard key={a.author_id} author={a} onClick={setSelectedAuthor} />
@@ -117,7 +118,7 @@ export default function HomePage({
               </div>
             )}
 
-            {error && <div className="state-error">⚠ {error}</div>}
+            {error && <div className="state-error"><AlertTriangle size={16} /> {error}</div>}
 
             {loading ? (
               <div className="book-grid">
@@ -149,14 +150,14 @@ export default function HomePage({
 
             {totalPages > 1 && (
               <div className="pagination">
-                <button className="pagination__btn" onClick={() => setPage((p) => p - 1)} disabled={page === 1}>‹</button>
+                <button className="pagination__btn" onClick={() => setPage((p) => p - 1)} disabled={page === 1} aria-label="Previous page">‹</button>
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                   const p = totalPages <= 7 ? i + 1 : page <= 4 ? i + 1 : page >= totalPages - 3 ? totalPages - 6 + i : page - 3 + i;
                   return (
-                    <button key={p} className={`pagination__btn${page === p ? " pagination__btn--active" : ""}`} onClick={() => setPage(p)}>{p}</button>
+                    <button key={p} className={`pagination__btn${page === p ? " pagination__btn--active" : ""}`} onClick={() => setPage(p)} aria-label={`Page ${p}`} aria-current={page === p ? "page" : undefined}>{p}</button>
                   );
                 })}
-                <button className="pagination__btn" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages}>›</button>
+                <button className="pagination__btn" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} aria-label="Next page">›</button>
               </div>
             )}
           </div>

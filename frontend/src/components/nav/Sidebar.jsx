@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X, Settings } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
 import "../../styles/Sidebar.css";
 
 export default function Sidebar({
@@ -8,12 +9,14 @@ export default function Sidebar({
   onCategoryChange,
   sortValue,
   onSortChange,
+  onNavigateToAdmin,
 }) {
+  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      {/* Floating filter button — mobile only (hidden on desktop via CSS) */}
+      {/* Floating filter button — mobile only */}
       <button
         className="sidebar-fab"
         onClick={() => setOpen(true)}
@@ -38,7 +41,7 @@ export default function Sidebar({
         className={`sidebar${open ? " sidebar--open" : ""}`}
         aria-label="Filters"
       >
-        {/* Close button — mobile only (hidden on desktop via CSS) */}
+        {/* Close button — mobile only */}
         <div className="sidebar__close">
           <button
             className="sidebar__close-btn"
@@ -49,9 +52,22 @@ export default function Sidebar({
           </button>
         </div>
 
+        {/* Admin button — visible to admins on both mobile and desktop */}
+        {user?.is_admin && (
+          <div className="sidebar__section">
+            <button
+              className="sidebar__admin-btn"
+              onClick={() => { onNavigateToAdmin?.(); setOpen(false); }}
+            >
+              <Settings size={14} /> Admin Panel
+            </button>
+          </div>
+        )}
+
         <div className="sidebar__section">
-          <div className="sidebar__title">Sort By</div>
+          <label className="sidebar__title" htmlFor="sort-select">Sort By</label>
           <select
+            id="sort-select"
             className="sidebar__select"
             value={sortValue}
             onChange={(e) => onSortChange(e.target.value)}
