@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import HomePage from "./pages/HomePage";
 import AuthPage from "./pages/AuthPage";
@@ -13,8 +13,44 @@ import PWAInstallBanner from "./components/common/PWAInstallBanner";
 
 function AppRoutes() {
   const { user, loading } = useAuth();
-  const [page, setPage]       = useState("home");
+  const [page, setPage] = useState("home");
   const [profileTab, setProfileTab] = useState("profile");
+  const pageRef = useRef("home");
+  const profileTabRef = useRef("profile");
+
+  const navigateTo = (newPage, tab = null) => {
+    // Use refs for current values instead of stale closure values
+    if (newPage === pageRef.current && (tab === null || tab === profileTabRef.current)) return;
+
+    window.history.pushState({ page: newPage, tab }, "", `#${newPage}`);
+    if (tab) {
+      setProfileTab(tab);
+      profileTabRef.current = tab;
+    }
+    setPage(newPage);
+    pageRef.current = newPage;
+  };
+
+  useEffect(() => {
+    const handlePopState = (e) => {
+      // If modal is open, let BookModal handle it
+      if (e.state?.modal) return;
+
+      const state = e.state;
+      if (state?.page) {
+        if (state.tab) setProfileTab(state.tab);
+        setPage(state.page);
+      } else {
+        window.history.pushState({ page: "home" }, "", "#home");
+        setPage("home");
+      }
+    };
+
+    window.history.replaceState({ page: "home" }, "", "#home");
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   if (loading) {
     return (
@@ -24,19 +60,19 @@ function AppRoutes() {
     );
   }
 
-  if (user  && page === "auth") setPage("home");
-  if (!user && ["profile","wishlist","orders","cart","reviews","admin"].includes(page)) setPage("home");
+  if (user  && page === "auth") navigateTo("home");
+  if (!user && ["profile","wishlist","orders","cart","reviews","admin"].includes(page)) navigateTo("home");
 
   const nav = {
-    onNavigateHome:       () => setPage("home"),
-    onNavigateToAuth:     () => setPage("auth"),
-    onNavigateToProfile:  () => { setProfileTab("profile"); setPage("profile"); },
-    onNavigateToWishlist: () => setPage("wishlist"),
-    onNavigateToOrders:   () => setPage("orders"),
-    onNavigateToCart:     () => setPage("cart"),
-    onNavigateToCheckout: () => setPage("checkout"),
-    onNavigateToReviews:  () => { setProfileTab("reviews"); setPage("profile"); },
-    onNavigateToAdmin:    () => setPage("admin"),
+    onNavigateHome:       () => navigateTo("home"),
+    onNavigateToAuth:     () => navigateTo("auth"),
+    onNavigateToProfile:  () => navigateTo("profile", "profile"),
+    onNavigateToWishlist: () => navigateTo("wishlist"),
+    onNavigateToOrders:   () => navigateTo("orders"),
+    onNavigateToCart:     () => navigateTo("cart"),
+    onNavigateToCheckout: () => navigateTo("checkout"),
+    onNavigateToReviews:  () => navigateTo("profile", "reviews"),
+    onNavigateToAdmin:    () => navigateTo("admin"),
   };
 
   if (page === "auth")     return <AuthPage     onNavigateHome={nav.onNavigateHome} />;

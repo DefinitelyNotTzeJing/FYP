@@ -45,10 +45,11 @@ Startup order:
     ngrok start laravel --config C:\ngrok\ngrok.yml
 4. face recognition api
     cd backend/face/insightface
-    start_api.bat
+    .\start_api.bat
 5. start react frontend
     cd frontend
         npm start (local testing/development)
         npx serve -s build (PWA testing on phone)
 6. netlify
     its live 24/7, upload the build folder from frontend/build to update to the latest changes
+        npm run build

@@ -13,6 +13,18 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   const [cartLoading, setCartLoading]         = useState(false);
   const [cartMsg, setCartMsg]                 = useState(null);
 
+  // Push a history entry when modal opens, pop it on back button
+  useEffect(() => {
+    window.history.pushState({ modal: true, bookId: book.book_id }, "", `#book-${book.book_id}`);
+    const handlePopState = (e) => {
+      onClose();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [book.book_id, onClose]);
+
   useEffect(() => {
     apiFetch(`/books/${book.book_id}`)
       .then((data) => { setDetail(data); setLoading(false); })
@@ -27,6 +39,11 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
 
   const b = detail || book;
   const reviews = b.reviews || [];
+
+  // When closing via X button or overlay, go back in history too
+  const handleClose = () => {
+    window.history.back();
+  };
 
   async function handleWishlist() {
     if (!token) { onRequireAuth?.(); return; }
@@ -59,10 +76,10 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   }
 
   return (
-    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="modal">
         <div className="modal__header">
-          <button className="modal__close" onClick={onClose}>✕</button>
+          <button className="modal__close" onClick={handleClose}>✕</button>
         </div>
 
         {loading ? (
