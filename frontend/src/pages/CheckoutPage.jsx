@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
+import { MapPin, Pencil, KeyRound, Camera, ArrowLeft, Check, Loader2, CheckCircle2, ArrowLeftRight } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { useCart, useProfile } from "../hooks/useProfile";
@@ -6,8 +7,8 @@ import Navbar from "../components/nav/Navbar";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 const CHALLENGES = [
-  { type: "turn_left",  instruction: "Rotate your head", arrow: "↔️", hint: "Slowly rotate your head left or right" },
-  { type: "turn_right", instruction: "Rotate your head", arrow: "↔️", hint: "Slowly rotate your head left or right" },
+  { type: "turn_left",  instruction: "Rotate your head", hint: "Slowly rotate your head left or right" },
+  { type: "turn_right", instruction: "Rotate your head", hint: "Slowly rotate your head left or right" },
 ];
 const CAPTURE_DURATION_MS = 5000;
 const CAPTURE_INTERVAL_MS = 250;
@@ -31,7 +32,7 @@ function Steps({ current }) {
               fontSize: "0.8rem", fontWeight: 700,
               transition: "all 0.3s",
             }}>
-              {i < current ? "✓" : i + 1}
+              {i < current ? <Check size={14} /> : i + 1}
             </div>
             <span style={{ fontSize: "0.72rem", color: i === current ? "var(--ink)" : "var(--muted)", fontWeight: i === current ? 600 : 400 }}>
               {s}
@@ -57,7 +58,6 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
   const [addressMode, setAddressMode] = useState(savedAddress ? "saved" : "new");
   const [customAddress, setCustomAddress] = useState("");
 
-  // Sync shippingAddress based on mode
   useEffect(() => {
     if (addressMode === "saved") {
       setShippingAddress(savedAddress || "");
@@ -72,7 +72,6 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
         Order Summary
       </h2>
 
-      {/* Items */}
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", marginBottom: "1.5rem" }}>
         {items.map((item) => {
           const book = item.book || {};
@@ -102,16 +101,14 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
         })}
       </div>
 
-      {/* Shipping address */}
       <div style={{ marginBottom: "1rem" }}>
-        <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.5rem", color: "var(--ink)" }}>
+        <label htmlFor="shipping-address" style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.5rem", color: "var(--ink)" }}>
           Shipping Address
         </label>
 
-        {/* Toggle — only shown if user has a saved address */}
         {savedAddress && (
           <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
-            {[["saved", "📍 Saved Address"], ["new", "✏️ One-time Address"]].map(([mode, label]) => (
+            {[["saved", <><MapPin size={13} /> Saved Address</>], ["new", <><Pencil size={13} /> One-time Address</>]].map(([mode, label]) => (
               <button
                 key={mode}
                 onClick={() => setAddressMode(mode)}
@@ -139,22 +136,23 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
           </div>
         ) : (
           <textarea
+            id="shipping-address"
             value={customAddress}
             onChange={(e) => setCustomAddress(e.target.value)}
             rows={2}
             autoFocus={addressMode === "new"}
             placeholder="Enter your shipping address…"
-            style={{ width: "100%", padding: "0.6rem 0.85rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", resize: "vertical", background: "var(--white)", color: "var(--ink)", boxSizing: "border-box" }}
+            style={{ width: "100%", padding: "0.6rem 0.85rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", resize: "vertical", maxHeight: "8rem", background: "var(--white)", color: "var(--ink)", boxSizing: "border-box" }}
           />
         )}
       </div>
 
-      {/* Payment method */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.35rem", color: "var(--ink)" }}>
+        <label htmlFor="payment-method" style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.35rem", color: "var(--ink)" }}>
           Payment Method
         </label>
         <select
+          id="payment-method"
           value={paymentMethod}
           onChange={(e) => setPaymentMethod(e.target.value)}
           style={{ width: "100%", padding: "0.6rem 0.85rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", background: "var(--white)", color: "var(--ink)", cursor: "pointer" }}
@@ -163,7 +161,6 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
         </select>
       </div>
 
-      {/* Pricing breakdown */}
       <div style={{ background: "var(--paper)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.1rem 1.25rem", marginBottom: "1.5rem" }}>
         {[
           ["Subtotal", `RM ${subtotal.toFixed(2)}`],
@@ -215,7 +212,7 @@ function AuthMethodStep({ hasFace, onChoose }) {
           onMouseEnter={(e) => e.currentTarget.style.borderColor = "var(--ink)"}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--border)"}
         >
-          <span style={{ fontSize: "1.6rem" }}>🔑</span>
+          <KeyRound size={24} strokeWidth={1.5} style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.95rem" }}>Password</div>
             <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "0.15rem" }}>Confirm with your account password</div>
@@ -235,7 +232,7 @@ function AuthMethodStep({ hasFace, onChoose }) {
           onMouseEnter={(e) => hasFace && (e.currentTarget.style.borderColor = "var(--ink)")}
           onMouseLeave={(e) => e.currentTarget.style.borderColor = "var(--border)"}
         >
-          <span style={{ fontSize: "1.6rem" }}>🫤</span>
+          <Camera size={24} strokeWidth={1.5} style={{ flexShrink: 0 }} />
           <div>
             <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.95rem" }}>
               Face Recognition
@@ -276,8 +273,8 @@ function PasswordVerifyStep({ paymentMethod, shippingAddress, notes, token, onSu
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: 0 }}>
-        ← Back
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.35rem", minHeight: 44 }}>
+        <ArrowLeft size={15} /> Back
       </button>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
         Enter Password
@@ -292,9 +289,14 @@ function PasswordVerifyStep({ paymentMethod, shippingAddress, notes, token, onSu
         </div>
       )}
 
+      <label htmlFor="verify-password" style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.4rem", color: "var(--ink)" }}>
+        Password
+      </label>
       <input
+        id="verify-password"
         type="password"
         placeholder="Your account password"
+        autoComplete="current-password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
@@ -315,15 +317,14 @@ function PasswordVerifyStep({ paymentMethod, shippingAddress, notes, token, onSu
 
 // ── Face Verify Step ───────────────────────────────────────────────────────
 function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSuccess, onBack }) {
-  const [step, setStep]             = useState("challenge"); // challenge | verifying | error
-  const [challenge, setChallenge]   = useState(null);
-  const [countdown, setCountdown]   = useState(3);
-  const [progress, setProgress]     = useState(0);
+  const [step, setStep]                   = useState("challenge");
+  const [challenge, setChallenge]         = useState(null);
+  const [countdown, setCountdown]         = useState(3);
+  const [progress, setProgress]           = useState(0);
   const [challengeDone, setChallengeDone] = useState(false);
-  const [capturePhase, setCapturePhase]   = useState("move");
-  const [poseMsg, setPoseMsg]       = useState("");
-  const [camReady, setCamReady]     = useState(false);
-  const [error, setError]           = useState(null);
+  const [poseMsg, setPoseMsg]             = useState("");
+  const [camReady, setCamReady]           = useState(false);
+  const [error, setError]                 = useState(null);
 
   const videoRef     = useRef(null);
   const streamRef    = useRef(null);
@@ -334,14 +335,12 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 
   useEffect(() => { challengeRef.current = challenge; }, [challenge]);
 
-  // Pick challenge on mount
   useEffect(() => {
     const c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
     challengeRef.current = c;
     setChallenge(c);
   }, []);
 
-  // Camera
   useEffect(() => {
     if (step !== "challenge") return;
     capturingRef.current = false;
@@ -360,7 +359,6 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
     };
   }, [step]);
 
-  // Countdown
   useEffect(() => {
     if (step !== "challenge") return;
     setCountdown(3);
@@ -388,7 +386,6 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
     capturingRef.current = true;
     framesRef.current = [];
     setProgress(0);
-    setCapturePhase("move");
     setChallengeDone(false);
     setPoseMsg("");
 
@@ -403,7 +400,6 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
       const frame = captureFrame();
       if (frame) framesRef.current.push(frame);
 
-      // Real-time pose check every 400ms
       if (elapsed - lastPoseCheck > 400 && frame) {
         lastPoseCheck = elapsed;
         try {
@@ -423,8 +419,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
               const needed = 3;
               if (deviation >= needed) {
                 setChallengeDone(true);
-                setCapturePhase("hold");
-                setPoseMsg(`✅ Head rotated ${deviation.toFixed(1)}° — hold still!`);
+                setPoseMsg(`Head rotated ${deviation.toFixed(1)}° — hold still!`);
               } else {
                 setPoseMsg(`Keep rotating… ${deviation.toFixed(1)}° / ${needed}°`);
               }
@@ -483,8 +478,8 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 
   return (
     <div>
-      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: 0 }}>
-        ← Back
+      <button onClick={onBack} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.35rem", minHeight: 44 }}>
+        <ArrowLeft size={15} /> Back
       </button>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", fontWeight: 600, marginBottom: "0.5rem" }}>
         Face Verification
@@ -492,12 +487,12 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 
       {step === "verifying" ? (
         <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--muted)" }}>
-          <div style={{ fontSize: "2.5rem", marginBottom: "1rem" }}>🔍</div>
+          <Loader2 size={40} strokeWidth={1.5} style={{ marginBottom: "1rem", animation: "spin 1s linear infinite" }} />
           <div style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>Verifying your identity…</div>
+          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         </div>
       ) : (
         <>
-          {/* Challenge banner */}
           {challenge && (
             <div style={{
               background: challengeDone ? "#f0fdf4" : "var(--paper)",
@@ -505,7 +500,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
               borderRadius: "10px", padding: "0.85rem 1.1rem", marginBottom: "1rem",
               textAlign: "center", transition: "all 0.3s",
             }}>
-              <div style={{ fontSize: "1.5rem", marginBottom: "0.25rem" }}>{challenge.arrow}</div>
+              <div style={{ display: "flex", justifyContent: "center", marginBottom: "0.25rem" }}><ArrowLeftRight size={24} strokeWidth={1.5} /></div>
               <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "0.95rem" }}>{challenge.instruction}</div>
               <div style={{ fontSize: "0.8rem", color: "var(--muted)", marginTop: "0.2rem" }}>
                 {!isCapturing && "Get ready…"}
@@ -520,7 +515,6 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
             </div>
           )}
 
-          {/* Countdown overlay */}
           <div style={{ position: "relative" }}>
             <video
               ref={videoRef}
@@ -536,7 +530,6 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
             )}
           </div>
 
-          {/* Progress bar */}
           {isCapturing && (
             <div style={{ height: 4, background: "var(--border)", borderRadius: 2, marginTop: "0.75rem", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${progress}%`, background: challengeDone ? "#16a34a" : "var(--accent)", borderRadius: 2, transition: "width 0.2s linear" }} />
@@ -557,14 +550,15 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 // ── Success Step ───────────────────────────────────────────────────────────
 function SuccessStep({ order, pricing, onDone }) {
   const totalAmount = parseFloat(order?.total_amount || 0);
-  // Derive breakdown: backend stores the full total, use pricing if available
   const subtotal  = pricing?.subtotal  ?? (totalAmount / 1.06 - 5).toFixed(2);
   const shippingF = pricing?.shipping  ?? "5.00";
   const taxF      = pricing?.tax       ?? ((totalAmount / 1.06 - 5) * 0.06).toFixed(2);
 
   return (
     <div style={{ textAlign: "center", padding: "1rem 0 2rem" }}>
-      <div style={{ fontSize: "4rem", marginBottom: "1rem", animation: "pop 0.4s ease" }}>✅</div>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", animation: "pop 0.4s ease", color: "#16a34a" }}>
+        <CheckCircle2 size={64} strokeWidth={1.5} />
+      </div>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>Order Placed!</h2>
       <p style={{ fontSize: "0.88rem", color: "var(--muted)", marginBottom: "1.5rem" }}>
         Your order has been confirmed and is being processed.
@@ -618,22 +612,19 @@ export default function CheckoutPage({
   const { items, loading: cartLoading } = useCart(token);
   const { profile } = useProfile(token);
 
-  const [step, setStep]             = useState("summary");   // summary | auth | password | face | done
-  const [paymentMethod, setPaymentMethod] = useState("Cash on Delivery");
+  const [step, setStep]                       = useState("summary");
+  const [paymentMethod, setPaymentMethod]     = useState("Cash on Delivery");
   const [shippingAddress, setShippingAddress] = useState("");
-  const [authMethod, setAuthMethod] = useState(null);
-  const [completedOrder, setCompletedOrder] = useState(null);
+  const [completedOrder, setCompletedOrder]   = useState(null);
   const [completedPricing, setCompletedPricing] = useState(null);
+  const [hasFace, setHasFace]                 = useState(false);
 
-  // Compute pricing from cart items
   const cartSubtotal = items.reduce((s, i) => s + parseFloat(i.book?.price || 0) * i.quantity, 0);
   const cartPricing = {
     subtotal: cartSubtotal.toFixed(2),
     shipping: "5.00",
     tax: (cartSubtotal * 0.06).toFixed(2),
   };
-
-  const [hasFace, setHasFace] = useState(false);
 
   useEffect(() => {
     if (!token) return;
@@ -642,7 +633,6 @@ export default function CheckoutPage({
       .catch(() => {});
   }, [token]);
 
-  // Pre-fill payment method from profile
   useEffect(() => {
     const saved = profile?.profile?.payment_method;
     if (saved && PAYMENT_METHODS.includes(saved)) setPaymentMethod(saved);
@@ -703,12 +693,12 @@ export default function CheckoutPage({
 
             {step === "auth" && (
               <>
-                <button onClick={() => setStep("summary")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: 0 }}>
-                  ← Back
+                <button onClick={() => setStep("summary")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.35rem", minHeight: 44 }}>
+                  <ArrowLeft size={15} /> Back
                 </button>
                 <AuthMethodStep
                   hasFace={hasFace}
-                  onChoose={(method) => { setAuthMethod(method); setStep(method); }}
+                  onChoose={(method) => setStep(method)}
                 />
               </>
             )}

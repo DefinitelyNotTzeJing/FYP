@@ -93,11 +93,12 @@
   color: var(--muted);
   display: flex;
   align-items: center;
-  gap: 1px;
+  gap: 2px;
   flex-wrap: nowrap;
 }
 
-.stars__icon { color: #e8a020; }
+.stars__icon { color: #e8a020; display: flex; align-items: center; }
+.stars__count { margin-left: 2px; }
 
 /* ── Skeleton loading ── */
 .book-card--skeleton {

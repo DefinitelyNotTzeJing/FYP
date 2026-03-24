@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Heart, X } from "lucide-react";
 import Stars from "../stars/Stars";
 import { apiFetch } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
@@ -8,21 +9,17 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   const { token } = useAuth();
   const [detail, setDetail]                   = useState(null);
   const [loading, setLoading]                 = useState(true);
+  const [reviews, setReviews]                 = useState([]);
   const [inWishlist, setInWishlist]           = useState(initialInWishlist);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [cartLoading, setCartLoading]         = useState(false);
   const [cartMsg, setCartMsg]                 = useState(null);
 
-  // Push a history entry when modal opens, pop it on back button
   useEffect(() => {
     window.history.pushState({ modal: true, bookId: book.book_id }, "", `#book-${book.book_id}`);
-    const handlePopState = (e) => {
-      onClose();
-    };
+    const handlePopState = () => { onClose(); };
     window.addEventListener("popstate", handlePopState);
-    return () => {
-      window.removeEventListener("popstate", handlePopState);
-    };
+    return () => window.removeEventListener("popstate", handlePopState);
   }, [book.book_id, onClose]);
 
   useEffect(() => {
@@ -31,19 +28,21 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
       .catch(() => { setDetail(book); setLoading(false); });
   }, [book]);
 
-  // Only check wishlist status if not already known (i.e. not opened from wishlist page)
+  // Fetch reviews with scores from dedicated endpoint
+  useEffect(() => {
+    apiFetch(`/books/${book.book_id}/reviews`)
+      .then((data) => setReviews(data.reviews || []))
+      .catch(() => setReviews([]));
+  }, [book.book_id]);
+
   useEffect(() => {
     if (!token || !wishlistHook || initialInWishlist) return;
     wishlistHook.check(book.book_id).then(setInWishlist);
   }, [book.book_id, token, wishlistHook, initialInWishlist]);
 
   const b = detail || book;
-  const reviews = b.reviews || [];
 
-  // When closing via X button or overlay, go back in history too
-  const handleClose = () => {
-    window.history.back();
-  };
+  const handleClose = () => { window.history.back(); };
 
   async function handleWishlist() {
     if (!token) { onRequireAuth?.(); return; }
@@ -79,7 +78,9 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
     <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && handleClose()}>
       <div className="modal">
         <div className="modal__header">
-          <button className="modal__close" onClick={handleClose}>✕</button>
+          <button className="modal__close" onClick={handleClose} aria-label="Close">
+            <X size={16} />
+          </button>
         </div>
 
         {loading ? (
@@ -121,8 +122,9 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
                   <button className="btn-primary" disabled={b.available_quantity === 0 || cartLoading} onClick={handleAddToCart}>
                     {cartLoading ? "Adding…" : b.available_quantity === 0 ? "Out of Stock" : "Add to Cart"}
                   </button>
-                  <button className="btn-secondary" onClick={handleWishlist} disabled={wishlistLoading} style={inWishlist ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}}>
-                    {wishlistLoading ? "…" : inWishlist ? "♥ Wishlisted" : "♡ Wishlist"}
+                  <button className="btn-secondary" onClick={handleWishlist} disabled={wishlistLoading} aria-busy={wishlistLoading} aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"} style={{ display: "flex", alignItems: "center", gap: "0.4rem", ...(inWishlist ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}) }}>
+                    <Heart size={15} fill={inWishlist ? "currentColor" : "none"} strokeWidth={1.5} />
+                    {wishlistLoading ? "Saving…" : inWishlist ? "Wishlisted" : "Wishlist"}
                   </button>
                 </div>
               </div>
@@ -136,7 +138,7 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
                   <div className="review-card" key={i}>
                     <div className="review-card__header">
                       <span className="review-card__name">{r.user?.username || "Anonymous"}</span>
-                      <Stars rating={r.score} count={0} />
+                      <Stars rating={r.score} />
                       <span className="review-card__date">{r.created_at ? new Date(r.created_at).toLocaleDateString() : ""}</span>
                     </div>
                     {r.comment && <div className="review-card__text">{r.comment}</div>}
