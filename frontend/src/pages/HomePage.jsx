@@ -120,7 +120,20 @@ export default function HomePage({
             {error && <div className="state-error">⚠ {error}</div>}
 
             {loading ? (
-              <div className="state-loading">Loading books…</div>
+              <div className="book-grid">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="book-card book-card--skeleton">
+                    <div className="book-card__cover" />
+                    <div className="book-card__info">
+                      <div className="book-card__title">&nbsp;</div>
+                      <div className="book-card__author">&nbsp;</div>
+                      <div className="book-card__footer">
+                        <span className="book-card__price">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : books.length === 0 ? (
               <div className="state-empty">
                 <div className="state-empty__title">No books found</div>

@@ -29,12 +29,11 @@ class BookController extends Controller
                 $query->where('available_quantity', '>', 0);
             }
 
-            // Search by title, description, OR author name
+            // Search by title OR author name
             if ($request->has('search') && $request->search) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('book_name', 'like', "%{$search}%")
-                      ->orWhere('book_description', 'like', "%{$search}%")
                       ->orWhereHas('author', function ($aq) use ($search) {
                           $aq->where('name', 'like', "%{$search}%");
                       });
@@ -79,12 +78,22 @@ class BookController extends Controller
                 'query' => 'required|string|min:2',
             ]);
 
+            $search = $request->input('query');
+
             $books = Book::with(['author', 'category'])
-                ->where('book_name', 'like', "%{$request->query}%")
-                ->orWhere('book_description', 'like', "%{$request->query}%")
-                ->orWhereHas('author', function ($q) use ($request) {
-                    $q->where('name', 'like', "%{$request->query}%");
+                ->where(function ($q) use ($search) {
+                    $q->where('book_name', 'like', "%{$search}%")
+                      ->orWhereHas('author', function ($aq) use ($search) {
+                          $aq->where('name', 'like', "%{$search}%");
+                      });
                 })
+                ->orderByRaw("
+                    CASE
+                        WHEN book_name LIKE ? THEN 1
+                        WHEN book_name LIKE ? THEN 2
+                        ELSE 3
+                    END", ["{$search}%", "%{$search}%"]
+                )
                 ->paginate(15);
 
             return response()->json($books);

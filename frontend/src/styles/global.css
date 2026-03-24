@@ -12,7 +12,7 @@
   --paper-dark:   #ede9e1;
   --accent:       #c8502a;
   --accent-light: #f0e8e3;
-  --muted:        #8a8680;
+  --muted:        #6b6762;
   --border:       #ddd9d0;
   --white:        #ffffff;
   --shadow:       0 2px 12px rgba(26,26,24,0.08);
@@ -35,3 +35,10 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 img { display: block; max-width: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

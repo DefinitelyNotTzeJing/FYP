@@ -51,7 +51,7 @@
 }
 
 .book-card__author {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-bottom: 0.4rem;
   white-space: nowrap;
@@ -76,7 +76,7 @@
 
 .badge {
   display: inline-block;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   font-weight: 500;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -89,7 +89,7 @@
 .badge--oos      { background: var(--border); color: var(--muted); }
 
 .stars {
-  font-size: 0.68rem;
+  font-size: 0.75rem;
   color: var(--muted);
   display: flex;
   align-items: center;
@@ -98,6 +98,36 @@
 }
 
 .stars__icon { color: #e8a020; }
+
+/* ── Skeleton loading ── */
+.book-card--skeleton {
+  pointer-events: none;
+}
+
+.book-card--skeleton .book-card__cover {
+  background: linear-gradient(90deg, var(--paper-dark) 25%, var(--border) 50%, var(--paper-dark) 75%);
+  background-size: 200% 100%;
+  animation: card-shimmer 1.4s infinite;
+}
+
+.book-card--skeleton .book-card__title,
+.book-card--skeleton .book-card__author,
+.book-card--skeleton .book-card__price {
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--paper-dark) 25%, var(--border) 50%, var(--paper-dark) 75%);
+  background-size: 200% 100%;
+  animation: card-shimmer 1.4s infinite;
+  color: transparent;
+}
+
+.book-card--skeleton .book-card__title  { height: 0.8rem; width: 80%; margin-bottom: 0.35rem; }
+.book-card--skeleton .book-card__author { height: 0.75rem; width: 55%; }
+.book-card--skeleton .book-card__price  { height: 0.82rem; width: 40%; }
+
+@keyframes card-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 /* ── Mobile: slightly tighter ── */
 @media (max-width: 480px) {
