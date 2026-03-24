@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python skills/ui-ux-pro-max/scripts/search.py \"sidebar filter navigation bookstore ecommerce\" --design-system -f markdown)",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"sidebar filter navigation bookstore ecommerce\" --design-system -f markdown)",
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"sidebar navigation accessibility touch interaction\" --domain ux -n 6)"
+    ]
+  }
+}

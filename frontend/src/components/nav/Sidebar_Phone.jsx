@@ -13,7 +13,7 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Floating filter button — mobile only (hidden on desktop via CSS) */}
+      {/* Floating filter button — mobile only */}
       <button
         className="sidebar-fab"
         onClick={() => setOpen(true)}
@@ -37,8 +37,9 @@ export default function Sidebar({
         id="filter-sidebar"
         className={`sidebar${open ? " sidebar--open" : ""}`}
         aria-label="Filters"
+        aria-hidden={!open}
       >
-        {/* Close button — mobile only (hidden on desktop via CSS) */}
+        {/* Close button — mobile only */}
         <div className="sidebar__close">
           <button
             className="sidebar__close-btn"
@@ -62,7 +63,7 @@ export default function Sidebar({
             <option value="price__desc">Price: High to Low</option>
             <option value="book_name__asc">Title A–Z</option>
             <option value="book_total_rating__desc">Top Rated</option>
-            <option value="featured__desc">Featured ⭐</option>
+            <option value="featured__desc">Featured</option>
           </select>
         </div>
 
