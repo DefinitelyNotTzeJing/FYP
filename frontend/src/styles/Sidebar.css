@@ -2,7 +2,12 @@
 .sidebar {
   position: sticky;
   top: 72px;
+  max-height: calc(100vh - 72px - 1.5rem);
+  overflow-y: auto;
+  scrollbar-width: none;
 }
+
+.sidebar::-webkit-scrollbar { display: none; }
 
 .sidebar__section {
   margin-bottom: 1.5rem;

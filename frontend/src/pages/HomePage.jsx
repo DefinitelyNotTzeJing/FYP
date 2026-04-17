@@ -20,6 +20,7 @@ export default function HomePage({
   onNavigateHome,
   onNavigateToAuth,
   onNavigateToProfile,
+  onNavigateToFaceLogin,
   onNavigateToWishlist,
   onNavigateToOrders,
   onNavigateToCart,
@@ -76,6 +77,105 @@ export default function HomePage({
   const handleSort     = (val) => { setSortValue(val); setPage(1); };
   const handleLogoClick = () => { setSearchInput(""); setSearch(""); setSelectedCategory(null); setPage(1); onNavigateHome?.(); };
 
+  const executeCommand = async (input) => {
+    const lower = input.toLowerCase().trim();
+
+    // ── Navigation ──
+    if (/\b(my cart|go to cart|open cart|checkout|check out)\b/.test(lower) && !/add/.test(lower)) {
+      onNavigateToCart?.();
+      return { ok: true, msg: "Opening your cart." };
+    }
+    if (/\b(wishlist|wish list)\b/.test(lower) && !/add/.test(lower)) {
+      onNavigateToWishlist?.();
+      return { ok: true, msg: "Opening your wishlist." };
+    }
+    if (/\b(orders?|my orders?|purchase history)\b/.test(lower)) {
+      onNavigateToOrders?.();
+      return { ok: true, msg: "Opening your orders." };
+    }
+    if (/face\s*(reg|login|register|recognition|id|face recog)|biometric/i.test(lower)) {
+      onNavigateToFaceLogin?.();
+      return { ok: true, msg: "Opening Face Login tab." };
+    }
+    if (/\b(edit profile|my profile|profile|account settings)\b/.test(lower)) {
+      onNavigateToProfile?.();
+      return { ok: true, msg: "Opening your profile." };
+    }
+    if (/\b(reviews?|my reviews?)\b/.test(lower)) {
+      onNavigateToReviews?.();
+      return { ok: true, msg: "Opening your reviews." };
+    }
+    if (/\b(home|go home|main page|back)\b/.test(lower)) {
+      handleLogoClick();
+      return { ok: true, msg: "Going home." };
+    }
+    if (/\b(admin|admin panel)\b/.test(lower)) {
+      onNavigateToAdmin?.();
+      return { ok: true, msg: "Opening admin panel." };
+    }
+    if (/\b(sign in|log in|login|sign up)\b/.test(lower)) {
+      onNavigateToAuth?.();
+      return { ok: true, msg: "Taking you to sign in." };
+    }
+
+    // ── Book actions ──
+    const addCartMatch    = lower.match(/add (.+?) to (?:my )?cart/);
+    const addWishMatch    = lower.match(/add (.+?) to (?:my )?wishlist/);
+    const viewMatch       = lower.match(/(?:check|show|open|view|find|search(?: for)?|look up) (.+?)(?:\s+book)?$/i);
+
+    if (addCartMatch || addWishMatch || viewMatch) {
+      const query = ((addCartMatch || addWishMatch || viewMatch)[1])
+        .replace(/\s+book$/i, "")
+        .trim();
+
+      let data;
+      try {
+        data = await apiFetch(`/books?search=${encodeURIComponent(query)}&per_page=5`);
+      } catch {
+        return { ok: false, msg: "Couldn't reach the server. Try again." };
+      }
+
+      const books = data.data || [];
+      if (!books.length) return { ok: false, msg: `No book found matching "${query}".` };
+      const book = books[0];
+
+      if (addCartMatch) {
+        if (!token) { onNavigateToAuth?.(); return { ok: false, msg: "Please sign in to add to cart." }; }
+        if (book.available_quantity === 0) return { ok: false, msg: `"${book.book_name}" is out of stock.` };
+        try {
+          await cartHook.add(book.book_id);
+          return { ok: true, msg: `"${book.book_name}" added to cart.` };
+        } catch {
+          return { ok: false, msg: "Could not add to cart." };
+        }
+      }
+
+      if (addWishMatch) {
+        if (!token) { onNavigateToAuth?.(); return { ok: false, msg: "Please sign in to add to wishlist." }; }
+        try {
+          const already = wishlistHook.items.some(
+            (i) => (i.book?.book_id ?? i.book_id) === book.book_id
+          );
+          if (already) return { ok: true, msg: `"${book.book_name}" is already in your wishlist.` };
+          await wishlistHook.add(book.book_id);
+          return { ok: true, msg: `"${book.book_name}" added to wishlist.` };
+        } catch {
+          return { ok: false, msg: "Could not add to wishlist." };
+        }
+      }
+
+      if (viewMatch) {
+        setSelectedBook(book);
+        return { ok: true, msg: `Showing "${book.book_name}".` };
+      }
+    }
+
+    return {
+      ok: false,
+      msg: `Not sure what you mean. Try: "show Harry Potter", "add Dune to cart", "go to wishlist".`,
+    };
+  };
+
   const totalPages = pagination?.last_page || 1;
   const isDefaultView = !search && !selectedCategory;
 
@@ -117,6 +217,7 @@ export default function HomePage({
             onCategoryChange={handleCategory}
             sortValue={sortValue}
             onSortChange={handleSort}
+            onCommand={executeCommand}
           />
 
           <div className="home__content">

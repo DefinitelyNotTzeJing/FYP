@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { SlidersHorizontal, X, Settings } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import AssistantBar from "../common/AssistantBar";
 import "../../styles/Sidebar.css";
 
 export default function Sidebar({
@@ -10,6 +11,7 @@ export default function Sidebar({
   sortValue,
   onSortChange,
   onNavigateToAdmin,
+  onCommand,
 }) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -104,6 +106,12 @@ export default function Sidebar({
             ))}
           </div>
         </div>
+
+        {onCommand && (
+          <div className="sidebar__section">
+            <AssistantBar onCommand={onCommand} />
+          </div>
+        )}
       </aside>
     </>
   );
