@@ -6,7 +6,8 @@
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"sidebar navigation accessibility touch interaction\" --domain ux -n 6)",
       "Bash(python skills/ui-ux-pro-max/scripts/search.py \"e-commerce bookstore checkout modal review\" --design-system -p \"BookStore\")",
       "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"e-commerce bookstore checkout modal review\" --design-system -p \"BookStore\")",
-      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"modal accessibility animation touch\" --domain ux)"
+      "Bash(python .claude/skills/ui-ux-pro-max/scripts/search.py \"modal accessibility animation touch\" --domain ux)",
+      "Bash(npm install *)"
     ]
   }
 }

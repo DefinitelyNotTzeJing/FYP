@@ -47,12 +47,12 @@
 .pagination__btn {
   width: 44px;
   height: 44px;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   border: 1.5px solid var(--border);
   background: var(--white);
   font-family: var(--font-body);
   font-size: 0.85rem;
-  color: var(--ink) !important;
+  color: var(--ink);
   transition: all 0.15s;
   display: flex;
   align-items: center;
@@ -79,7 +79,13 @@
 .pagination__btn--active {
   background: var(--accent);
   border-color: var(--accent);
-  color: white !important;
+  color: white;
+}
+
+.pagination__btn--active:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: white;
 }
 
 .pagination__btn:disabled {

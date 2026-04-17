@@ -2,10 +2,10 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1.1rem;
+  padding: 0.75rem 1rem;
   background: var(--white);
   border: 1.5px solid var(--border);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s;
 }
@@ -44,12 +44,12 @@
 }
 
 .author-card__label {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.07em;
+  letter-spacing: 0.1em;
   color: var(--muted);
-  margin-bottom: 0.15rem;
+  margin-bottom: 0.25rem;
 }
 
 .author-card__name {
@@ -61,7 +61,7 @@
 }
 
 .author-card__bio {
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
@@ -85,12 +85,12 @@
 }
 
 .author-results__title {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--muted);
-  margin-bottom: 0.65rem;
+  margin-bottom: 0.75rem;
 }
 
 .author-results__list {

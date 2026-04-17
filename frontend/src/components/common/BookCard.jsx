@@ -1,9 +1,39 @@
+import { useRef, useEffect } from "react";
 import Stars from "../stars/Stars";
 import "../../styles/BookCard.css";
 
-export default function BookCard({ book, onClick }) {
+export default function BookCard({ book, onClick, index = 0 }) {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      el.classList.remove("book-card--hidden");
+      el.classList.add("book-card--visible");
+      return;
+    }
+
+    const delay = Math.min(index % 6, 5) * 55;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setTimeout(() => {
+            el.classList.remove("book-card--hidden");
+            el.classList.add("book-card--visible");
+          }, delay);
+          obs.unobserve(el);
+        }
+      },
+      { threshold: 0.05 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [index]);
+
   return (
-    <div className="book-card" onClick={() => onClick(book)}>
+    <div ref={ref} className="book-card book-card--hidden" onClick={() => onClick(book)}>
       {book.cover_image_url ? (
         <div className="book-card__cover">
           <img src={book.cover_image_url} alt={book.book_name} loading="lazy" />

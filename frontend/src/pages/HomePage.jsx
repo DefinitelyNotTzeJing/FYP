@@ -5,6 +5,8 @@ import Navbar from "../components/nav/Navbar";
 import Sidebar from "../components/nav/Sidebar";
 import BookCard from "../components/common/BookCard";
 import BookModal from "../components/common/BookModal";
+import FeaturedHero from "../components/common/FeaturedHero";
+import FeaturedRow from "../components/common/FeaturedRow";
 import { useBooks, useCategories } from "../hooks/useBooks";
 import AuthorCard from "../components/common/AuthorCard";
 import AuthorModal from "../components/common/AuthorModal";
@@ -14,15 +16,15 @@ import "../styles/HomePage.css";
 import "../styles/AuthorCard.css";
 import "../styles/AuthorModal.css";
 
-export default function HomePage({ 
-  onNavigateHome, 
-  onNavigateToAuth, 
-  onNavigateToProfile, 
-  onNavigateToWishlist, 
-  onNavigateToOrders, 
-  onNavigateToCart, 
+export default function HomePage({
+  onNavigateHome,
+  onNavigateToAuth,
+  onNavigateToProfile,
+  onNavigateToWishlist,
+  onNavigateToOrders,
+  onNavigateToCart,
   onNavigateToReviews,
-  onNavigateToAdmin, }) 
+  onNavigateToAdmin, })
   {
   const { token } = useAuth();
   const { profile } = useProfile(token);
@@ -35,6 +37,7 @@ export default function HomePage({
   const [selectedBook, setSelectedBook] = useState(null);
   const [authors, setAuthors] = useState([]);
   const [selectedAuthor, setSelectedAuthor] = useState(null);
+  const [featuredBooks, setFeaturedBooks] = useState([]);
 
   const [sortBy, sortOrder] = sortValue.split("__");
   const categories = useCategories();
@@ -44,6 +47,16 @@ export default function HomePage({
 
   const wishlistHook = useWishlist(token);
   const cartHook     = useCart(token);
+
+  // Fetch featured books once for hero + row
+  useEffect(() => {
+    apiFetch("/books?sort_by=is_featured&sort_order=desc&per_page=12")
+      .then((data) => {
+        const featured = (data.data || []).filter((b) => b.is_featured);
+        setFeaturedBooks(featured);
+      })
+      .catch(() => {});
+  }, []);
 
   // Debounced search
   useEffect(() => {
@@ -64,6 +77,7 @@ export default function HomePage({
   const handleLogoClick = () => { setSearchInput(""); setSearch(""); setSelectedCategory(null); setPage(1); onNavigateHome?.(); };
 
   const totalPages = pagination?.last_page || 1;
+  const isDefaultView = !search && !selectedCategory;
 
   const pageTitle = search
     ? `"${search}"`
@@ -90,6 +104,11 @@ export default function HomePage({
       />
 
       <main className="home">
+        {/* Hero — only on default view with featured books */}
+        {isDefaultView && featuredBooks.length > 0 && (
+          <FeaturedHero books={featuredBooks} onBookClick={setSelectedBook} />
+        )}
+
         <div className="home__layout">
           <Sidebar
             onNavigateToAdmin={onNavigateToAdmin}
@@ -105,6 +124,11 @@ export default function HomePage({
               <h1 className="home__title">{pageTitle}</h1>
               {pagination && <span className="home__count">{pagination.total} books</span>}
             </div>
+
+            {/* Featured row — only on default view */}
+            {isDefaultView && featuredBooks.length > 0 && (
+              <FeaturedRow books={featuredBooks} onBookClick={setSelectedBook} />
+            )}
 
             {/* Author results — only shown when searching */}
             {search && authors.length > 0 && (
@@ -142,8 +166,8 @@ export default function HomePage({
               </div>
             ) : (
               <div className="book-grid">
-                {books.map((book) => (
-                  <BookCard key={book.book_id} book={book} onClick={setSelectedBook} />
+                {books.map((book, i) => (
+                  <BookCard key={book.book_id} book={book} onClick={setSelectedBook} index={i} />
                 ))}
               </div>
             )}
