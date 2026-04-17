@@ -42,7 +42,7 @@ Startup order:
     php artisan serve --host=0.0.0.0 --port=8000
 3. ngrok
     cd C:\ngrok
-    ngrok start laravel --config C:\ngrok\ngrok.yml
+    .\ngrok start laravel --config C:\ngrok\ngrok.yml
 4. face recognition api
     cd backend/face/insightface
     .\start_api.bat
