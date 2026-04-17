@@ -6,16 +6,19 @@ import ReviewsTab from "../components/tabs/ReviewsTab";
 import ChangePasswordTab from "../components/profile/ChangePasswordTab";
 import FaceRegisterTab from "../components/profile/FaceRegisterTab";
 import { useProfile, useMyReviews } from "../hooks/useProfile";
+import { usePreorders } from "../hooks/usePreorders";
+import PreordersTab from "../components/tabs/PreordersTab";
 import "../styles/profile/ProfilePage.css";
 
 const TABS = [
-  { key: "profile",  label: "Profile" },
-  { key: "reviews",  label: "My Reviews" },
-  { key: "password", label: "Change Password" },
-  { key: "face",     label: "Face Login" },
+  { key: "profile",   label: "Profile" },
+  { key: "reviews",   label: "My Reviews" },
+  { key: "preorders", label: "Pre-orders" },
+  { key: "password",  label: "Change Password" },
+  { key: "face",      label: "Face Login" },
 ];
 
-export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToAdmin, initialTab = "profile" }) {
+export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToPreorders, onNavigateToAdmin, initialTab = "profile" }) {
   const { user, token } = useAuth();
   const [tab, setTab]                   = useState(initialTab);
   const [pendingImage, setPendingImage] = useState(null);
@@ -23,6 +26,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
 
   const { profile, loading: profileLoading, updateProfile } = useProfile(token);
   const { reviews, loading: reviewsLoading, refresh: refreshReviews } = useMyReviews(token);
+  const { preorders, loading: preordersLoading, cancel: cancelPreorder } = usePreorders(token);
 
   const savedAvatarUrl = profile?.profile?.profile_image_base64 || null;
   const avatarSrc      = pendingImage || savedAvatarUrl;
@@ -57,6 +61,7 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={() => setTab("reviews")}
+        onNavigateToPreorders={() => setTab("preorders")}
         onNavigateToAdmin={onNavigateToAdmin}
         profileImage={pendingImage || savedAvatarUrl}
         onNavigateHome={onNavigateHome}
@@ -104,10 +109,11 @@ export default function ProfilePage({ onNavigateHome, onNavigateToAuth, onNaviga
           ))}
         </div>
 
-        {tab === "profile"  && (profileLoading ? <div className="profile-loading">Loading profile…</div> : <EditProfileTab profile={profile} onSave={handleSave} pendingImage={pendingImage} />)}
-        {tab === "reviews"  && <ReviewsTab reviews={reviews} loading={reviewsLoading} onRefresh={refreshReviews} />}
-        {tab === "password" && <ChangePasswordTab />}
-        {tab === "face"     && <FaceRegisterTab />}
+        {tab === "profile"   && (profileLoading ? <div className="profile-loading">Loading profile…</div> : <EditProfileTab profile={profile} onSave={handleSave} pendingImage={pendingImage} />)}
+        {tab === "reviews"   && <ReviewsTab reviews={reviews} loading={reviewsLoading} onRefresh={refreshReviews} />}
+        {tab === "preorders" && <PreordersTab preorders={preorders} loading={preordersLoading} onCancel={cancelPreorder} />}
+        {tab === "password"  && <ChangePasswordTab />}
+        {tab === "face"      && <FaceRegisterTab />}
       </div>
     </>
   );

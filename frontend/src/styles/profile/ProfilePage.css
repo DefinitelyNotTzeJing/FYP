@@ -321,6 +321,11 @@
 .order-status--delivered  { background: #dcfce7; color: #166534; }
 .order-status--cancelled  { background: #fee2e2; color: #991b1b; }
 
+.preorder-status           { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+.preorder-status--pending  { background: #ede9fe; color: #4f46e5; }
+.preorder-status--cancelled{ background: #fee2e2; color: #991b1b; }
+.preorder-status--fulfilled{ background: #dcfce7; color: #166534; }
+
 .order-card__items { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.6rem; }
 
 .order-card__footer {

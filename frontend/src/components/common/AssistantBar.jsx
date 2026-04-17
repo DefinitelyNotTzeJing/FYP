@@ -6,6 +6,7 @@ const HINTS = [
   'add Harry Potter to cart',
   'show Dune',
   'go to wishlist',
+  'my pre-orders',
   'face registration',
   'edit profile',
 ];

@@ -3,7 +3,7 @@ import Navbar from "../components/nav/Navbar";
 import OrdersTab from "../components/tabs/OrdersTab";
 import { useOrders, useProfile } from "../hooks/useProfile";
 
-export default function OrdersPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToAdmin }) {
+export default function OrdersPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToPreorders, onNavigateToAdmin }) {
   const { token } = useAuth();
   const { orders, loading } = useOrders(token);
   const { profile } = useProfile(token);
@@ -19,6 +19,7 @@ export default function OrdersPage({ onNavigateHome, onNavigateToAuth, onNavigat
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToPreorders={onNavigateToPreorders}
         onNavigateToAdmin={onNavigateToAdmin}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}

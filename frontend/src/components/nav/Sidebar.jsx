@@ -1,6 +1,5 @@
 import { useState } from "react";
-import { SlidersHorizontal, X, Settings } from "lucide-react";
-import { useAuth } from "../../context/AuthContext";
+import { SlidersHorizontal, X } from "lucide-react";
 import AssistantBar from "../common/AssistantBar";
 import "../../styles/Sidebar.css";
 
@@ -10,10 +9,8 @@ export default function Sidebar({
   onCategoryChange,
   sortValue,
   onSortChange,
-  onNavigateToAdmin,
   onCommand,
 }) {
-  const { user } = useAuth();
   const [open, setOpen] = useState(false);
 
   return (
@@ -53,18 +50,6 @@ export default function Sidebar({
             <X size={18} />
           </button>
         </div>
-
-        {/* Admin button — visible to admins on both mobile and desktop */}
-        {user?.is_admin && (
-          <div className="sidebar__section">
-            <button
-              className="sidebar__admin-btn"
-              onClick={() => { onNavigateToAdmin?.(); setOpen(false); }}
-            >
-              <Settings size={14} /> Admin Panel
-            </button>
-          </div>
-        )}
 
         <div className="sidebar__section">
           <label className="sidebar__title" htmlFor="sort-select">Sort By</label>

@@ -570,10 +570,265 @@ function CategoriesTab({ token }) {
   );
 }
 
+// ── Admin Orders Tab ───────────────────────────────────────────────────────
+function AdminOrdersTab({ token }) {
+  const [orders, setOrders]   = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter]   = useState("all");
+  const [search, setSearch]   = useState("");
+  const [msg, setMsg]         = useState(null);
+  const [updating, setUpdating] = useState(null);
+
+  const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
+
+  const statusColor = {
+    pending:    "#854d0e", processing: "#1e40af", shipped: "#5b21b6",
+    delivered:  "#166534", cancelled:  "#991b1b",
+  };
+  const statusBg = {
+    pending:    "#fef9c3", processing: "#dbeafe", shipped: "#ede9fe",
+    delivered:  "#dcfce7", cancelled:  "#fee2e2",
+  };
+
+  const load = useCallback(() => {
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (filter !== "all") params.set("status", filter);
+    if (search.trim())    params.set("order_number", search.trim());
+    apiFetch(`/admin/orders?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((d) => { setOrders(d.data || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [token, filter, search]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function changeStatus(orderId, status) {
+    setUpdating(orderId);
+    try {
+      await apiFetch(`/admin/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      setMsg({ ok: true, text: `Order #${orderId} marked as ${status}.` });
+      load();
+    } catch {
+      setMsg({ ok: false, text: "Failed to update order status." });
+    }
+    setUpdating(null);
+    setTimeout(() => setMsg(null), 2500);
+  }
+
+  // Summary counts
+  const counts = orders.reduce((acc, o) => {
+    acc[o.status] = (acc[o.status] || 0) + 1;
+    return acc;
+  }, {});
+
+  return (
+    <div>
+      {/* Summary chips */}
+      <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
+        {ORDER_STATUSES.map((s) => (
+          <button
+            key={s}
+            onClick={() => setFilter(filter === s ? "all" : s)}
+            style={{
+              padding: "0.3rem 0.85rem", borderRadius: 20, border: "none", cursor: "pointer",
+              fontSize: "0.78rem", fontWeight: 600,
+              background: filter === s ? statusBg[s] : "var(--paper)",
+              color: filter === s ? statusColor[s] : "var(--muted)",
+              outline: filter === s ? `2px solid ${statusColor[s]}` : "2px solid transparent",
+              transition: "all 0.15s",
+            }}
+          >
+            {s.charAt(0).toUpperCase() + s.slice(1)}
+            {counts[s] ? <span style={{ marginLeft: 5, opacity: 0.7 }}>({counts[s]})</span> : null}
+          </button>
+        ))}
+      </div>
+
+      {/* Search + filter bar */}
+      <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap", alignItems: "center" }}>
+        <input
+          style={{ ...S.input, maxWidth: 260 }}
+          placeholder="Search order number…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </div>
+
+      <Msg msg={msg} />
+
+      <div style={S.card}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["Order #", "Customer", "Items", "Total", "Payment", "Status", "Date", "Change Status"].map((h) => (
+                <th key={h} style={S.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>Loading…</td></tr>
+            ) : orders.length === 0 ? (
+              <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>No orders found.</td></tr>
+            ) : orders.map((o) => (
+              <tr key={o.order_id} style={{ transition: "background 0.1s" }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = ""}
+              >
+                <td style={{ ...S.td, fontWeight: 600 }}>{o.order_number}</td>
+                <td style={S.td}>{o.user?.username || o.user_id}</td>
+                <td style={{ ...S.td, maxWidth: 200 }}>
+                  <div style={{ fontSize: "0.82rem", color: "var(--muted)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    {o.items?.map((i) => i.book?.book_name).filter(Boolean).join(", ") || "—"}
+                  </div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--muted)" }}>{o.items?.length || 0} item(s)</div>
+                </td>
+                <td style={{ ...S.td, fontWeight: 600 }}>RM {parseFloat(o.total_amount).toFixed(2)}</td>
+                <td style={S.td}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 600, padding: "2px 8px", borderRadius: 20,
+                    background: o.payment_status === "paid" ? "#dcfce7" : "#fef9c3",
+                    color: o.payment_status === "paid" ? "#166534" : "#854d0e" }}>
+                    {o.payment_status}
+                  </span>
+                </td>
+                <td style={S.td}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 600, padding: "2px 8px", borderRadius: 20,
+                    background: statusBg[o.status] || "#f1f5f9",
+                    color: statusColor[o.status] || "var(--muted)" }}>
+                    {o.status}
+                  </span>
+                </td>
+                <td style={{ ...S.td, whiteSpace: "nowrap" }}>
+                  {new Date(o.created_at).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
+                </td>
+                <td style={S.td}>
+                  <select
+                    value={o.status}
+                    disabled={updating === o.order_id}
+                    onChange={(e) => changeStatus(o.order_id, e.target.value)}
+                    style={{ ...S.input, width: "auto", padding: "0.3rem 0.5rem", fontSize: "0.78rem",
+                      borderColor: statusColor[o.status], color: statusColor[o.status],
+                      background: statusBg[o.status], fontWeight: 600 }}
+                  >
+                    {ORDER_STATUSES.map((s) => (
+                      <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                    ))}
+                  </select>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+// ── Admin PreordersTab ─────────────────────────────────────────────────────
+function AdminPreordersTab({ token }) {
+  const [preorders, setPreorders] = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [filter, setFilter]       = useState("all");
+  const [msg, setMsg]             = useState(null);
+
+  const load = useCallback(() => {
+    setLoading(true);
+    apiFetch(`/admin/preorders${filter !== "all" ? `?status=${filter}` : ""}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((d) => { setPreorders(d.data?.data || d.data || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [token, filter]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function updateStatus(id, status) {
+    try {
+      await apiFetch(`/admin/preorders/${id}/status`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      });
+      setMsg({ ok: true, text: `Marked as ${status}.` });
+      load();
+    } catch {
+      setMsg({ ok: false, text: "Failed to update status." });
+    }
+    setTimeout(() => setMsg(null), 2500);
+  }
+
+  const statusColor = { pending: "#854d0e", cancelled: "#991b1b", fulfilled: "#166534" };
+  const statusBg    = { pending: "#fef9c3", cancelled: "#fee2e2", fulfilled: "#dcfce7" };
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem" }}>Pre-orders</div>
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          style={{ ...S.input, width: "auto", padding: "0.35rem 0.6rem" }}
+        >
+          <option value="all">All</option>
+          <option value="pending">Pending</option>
+          <option value="fulfilled">Fulfilled</option>
+          <option value="cancelled">Cancelled</option>
+        </select>
+      </div>
+      <Msg msg={msg} />
+      <div style={S.card}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["ID", "User", "Book", "Price", "Status", "Date", "Actions"].map((h) => (
+                <th key={h} style={S.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>Loading…</td></tr>
+            ) : preorders.length === 0 ? (
+              <tr><td colSpan={7} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>No pre-orders found.</td></tr>
+            ) : preorders.map((p) => (
+              <tr key={p.preorder_id}>
+                <td style={S.td}>#{p.preorder_id}</td>
+                <td style={S.td}>{p.user?.username || p.user_id}</td>
+                <td style={S.td}>{p.book?.book_name || p.book_id}</td>
+                <td style={S.td}>RM {parseFloat(p.price_at_preorder).toFixed(2)}</td>
+                <td style={S.td}>
+                  <span style={{ fontSize: "0.72rem", fontWeight: 600, padding: "2px 8px", borderRadius: 20, background: statusBg[p.status], color: statusColor[p.status] }}>
+                    {p.status.charAt(0).toUpperCase() + p.status.slice(1)}
+                  </span>
+                </td>
+                <td style={S.td}>{new Date(p.created_at).toLocaleDateString("en-MY")}</td>
+                <td style={S.td}>
+                  <div style={{ display: "flex", gap: "0.4rem" }}>
+                    {p.status === "pending" && (
+                      <>
+                        <button style={{ ...S.btnSec, fontSize: "0.75rem", padding: "0.3rem 0.65rem" }} onClick={() => updateStatus(p.preorder_id, "fulfilled")}>Fulfill</button>
+                        <button style={{ ...S.btnDang, fontSize: "0.75rem", padding: "0.3rem 0.65rem" }} onClick={() => updateStatus(p.preorder_id, "cancelled")}>Cancel</button>
+                      </>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Main AdminPage ─────────────────────────────────────────────────────────
 export default function AdminPage({
   onNavigateHome, onNavigateToAuth, onNavigateToProfile,
-  onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews,
+  onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToPreorders,
 }) {
   const { user, token } = useAuth();
   const { profile } = useProfile(token);
@@ -587,7 +842,7 @@ export default function AdminPage({
         <Navbar onLogoClick={onNavigateHome} onNavigateToAuth={onNavigateToAuth}
           onNavigateToProfile={onNavigateToProfile} onNavigateToWishlist={onNavigateToWishlist}
           onNavigateToOrders={onNavigateToOrders} onNavigateToCart={onNavigateToCart}
-          onNavigateToReviews={onNavigateToReviews} profileImage={profileImage}
+          onNavigateToReviews={onNavigateToReviews} onNavigateToPreorders={onNavigateToPreorders} profileImage={profileImage}
           onNavigateHome={onNavigateHome} />
         <div style={{ textAlign: "center", padding: "6rem 2rem", color: "var(--muted)" }}>
           <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🚫</div>
@@ -616,14 +871,16 @@ export default function AdminPage({
         </div>
 
         <div style={S.tabs}>
-          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"]].map(([key, label]) => (
+          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"], ["orders", "🧾 Orders"], ["preorders", "🔔 Pre-orders"]].map(([key, label]) => (
             <button key={key} style={S.tab(tab === key)} onClick={() => setTab(key)}>{label}</button>
           ))}
         </div>
 
-        {tab === "books"      && <BooksTab      token={token} />}
-        {tab === "authors"    && <AuthorsTab    token={token} />}
-        {tab === "categories" && <CategoriesTab token={token} />}
+        {tab === "books"      && <BooksTab             token={token} />}
+        {tab === "authors"    && <AuthorsTab           token={token} />}
+        {tab === "categories" && <CategoriesTab        token={token} />}
+        {tab === "orders"     && <AdminOrdersTab       token={token} />}
+        {tab === "preorders"  && <AdminPreordersTab    token={token} />}
       </div>
     </>
   );

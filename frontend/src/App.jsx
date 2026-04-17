@@ -71,8 +71,9 @@ function AppRoutes() {
     onNavigateToOrders:   () => navigateTo("orders"),
     onNavigateToCart:     () => navigateTo("cart"),
     onNavigateToCheckout: () => navigateTo("checkout"),
-    onNavigateToReviews:  () => navigateTo("profile", "reviews"),
+    onNavigateToReviews:   () => navigateTo("profile", "reviews"),
     onNavigateToFaceLogin: () => navigateTo("profile", "face"),
+    onNavigateToPreorders: () => navigateTo("profile", "preorders"),
     onNavigateToAdmin:    () => navigateTo("admin"),
   };
 

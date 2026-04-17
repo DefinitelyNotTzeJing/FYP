@@ -25,7 +25,8 @@ export default function HomePage({
   onNavigateToOrders,
   onNavigateToCart,
   onNavigateToReviews,
-  onNavigateToAdmin, })
+  onNavigateToAdmin,
+  onNavigateToPreorders, })
   {
   const { token } = useAuth();
   const { profile } = useProfile(token);
@@ -104,6 +105,10 @@ export default function HomePage({
     if (/\b(reviews?|my reviews?)\b/.test(lower)) {
       onNavigateToReviews?.();
       return { ok: true, msg: "Opening your reviews." };
+    }
+    if (/\b(pre-?orders?|my pre-?orders?|preorders?)\b/.test(lower)) {
+      onNavigateToPreorders?.();
+      return { ok: true, msg: "Opening your pre-orders." };
     }
     if (/\b(home|go home|main page|back)\b/.test(lower)) {
       handleLogoClick();
@@ -199,6 +204,7 @@ export default function HomePage({
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToPreorders={onNavigateToPreorders}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}
       />

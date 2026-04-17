@@ -102,8 +102,9 @@
   margin-bottom: 0.25rem;
 }
 
-.badge--featured { background: var(--accent); color: white; }
-.badge--oos      { background: var(--border); color: var(--muted); }
+.badge--featured  { background: var(--accent); color: white; }
+.badge--oos       { background: var(--border); color: var(--muted); }
+.badge--preorder  { background: #ede9fe; color: #4f46e5; }
 
 .stars {
   font-size: 0.75rem;

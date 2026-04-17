@@ -2,7 +2,7 @@ import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/nav/Navbar";
 import { useCart, useProfile } from "../hooks/useProfile";
 
-export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToCheckout, onNavigateToAdmin }) {
+export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateToProfile, onNavigateToWishlist, onNavigateToOrders, onNavigateToCart, onNavigateToReviews, onNavigateToPreorders, onNavigateToCheckout, onNavigateToAdmin }) {
   const { token } = useAuth();
   const { items, loading, remove, update, clear, totalQty } = useCart(token);
   const { profile } = useProfile(token);
@@ -22,6 +22,7 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToPreorders={onNavigateToPreorders}
         onNavigateToAdmin={onNavigateToAdmin}
         cartCount={totalQty}
         profileImage={profileImage}

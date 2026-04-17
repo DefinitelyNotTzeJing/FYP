@@ -3,6 +3,7 @@ import { Heart, X } from "lucide-react";
 import Stars from "../stars/Stars";
 import { apiFetch } from "../../utils/api";
 import { useAuth } from "../../context/AuthContext";
+import { usePreorders } from "../../hooks/usePreorders";
 import "../../styles/BookModal.css";
 
 export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, cartHook, initialInWishlist = false }) {
@@ -14,6 +15,9 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [cartLoading, setCartLoading]         = useState(false);
   const [cartMsg, setCartMsg]                 = useState(null);
+  const preorderHook = usePreorders(token);
+  const [preorderLoading, setPreorderLoading] = useState(false);
+  const [preorderMsg, setPreorderMsg]         = useState(null);
 
   useEffect(() => {
     window.history.pushState({ modal: true, bookId: book.book_id }, "", `#book-${book.book_id}`);
@@ -41,8 +45,29 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   }, [book.book_id, token, wishlistHook, initialInWishlist]);
 
   const b = detail || book;
+  const existingPreorder = preorderHook.check(b.book_id);
+  const inPreorder = !!existingPreorder;
 
   const handleClose = () => { window.history.back(); };
+
+  async function handlePreorder() {
+    if (!token) { onRequireAuth?.(); return; }
+    setPreorderLoading(true);
+    setPreorderMsg(null);
+    try {
+      if (inPreorder) {
+        await preorderHook.cancel(existingPreorder.preorder_id);
+        setPreorderMsg({ ok: true, text: "Pre-order cancelled." });
+      } else {
+        await preorderHook.add(b.book_id, 1);
+        setPreorderMsg({ ok: true, text: "Pre-order placed! We'll notify you when it's back in stock." });
+      }
+      setTimeout(() => setPreorderMsg(null), 3000);
+    } catch (e) {
+      setPreorderMsg({ ok: false, text: e?.response?.error || "Failed. Please try again." });
+    }
+    setPreorderLoading(false);
+  }
 
   async function handleWishlist() {
     if (!token) { onRequireAuth?.(); return; }
@@ -113,15 +138,25 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
                   </div>
                 </div>
                 {b.book_description && <p className="modal__desc">{b.book_description}</p>}
-                {cartMsg && (
-                  <div style={{ fontSize: "0.82rem", color: cartMsg.ok ? "#166534" : "#c0392b", background: cartMsg.ok ? "#f0fdf4" : "#fef2f2", border: `1px solid ${cartMsg.ok ? "#bbf7d0" : "#fecaca"}`, padding: "0.5rem 0.75rem", borderRadius: "6px", marginBottom: "0.75rem" }}>
-                    {cartMsg.text}
+                {(cartMsg || preorderMsg) && (
+                  <div style={{ fontSize: "0.82rem", color: (cartMsg || preorderMsg).ok ? "#166534" : "#c0392b", background: (cartMsg || preorderMsg).ok ? "#f0fdf4" : "#fef2f2", border: `1px solid ${(cartMsg || preorderMsg).ok ? "#bbf7d0" : "#fecaca"}`, padding: "0.5rem 0.75rem", borderRadius: "6px", marginBottom: "0.75rem" }}>
+                    {(cartMsg || preorderMsg).text}
                   </div>
                 )}
                 <div className="modal__actions">
-                  <button className="btn-primary" disabled={b.available_quantity === 0 || cartLoading} onClick={handleAddToCart}>
-                    {cartLoading ? "Adding…" : b.available_quantity === 0 ? "Out of Stock" : "Add to Cart"}
-                  </button>
+                  {b.available_quantity === 0 ? (
+                    <button
+                      className="btn-preorder"
+                      onClick={handlePreorder}
+                      disabled={preorderLoading}
+                    >
+                      {preorderLoading ? "Saving…" : inPreorder ? "Cancel Pre-order" : "Pre-order"}
+                    </button>
+                  ) : (
+                    <button className="btn-primary" disabled={cartLoading} onClick={handleAddToCart}>
+                      {cartLoading ? "Adding…" : "Add to Cart"}
+                    </button>
+                  )}
                   <button className="btn-secondary" onClick={handleWishlist} disabled={wishlistLoading} aria-busy={wishlistLoading} aria-label={inWishlist ? "Remove from wishlist" : "Add to wishlist"} style={{ display: "flex", alignItems: "center", gap: "0.4rem", ...(inWishlist ? { borderColor: "var(--accent)", color: "var(--accent)" } : {}) }}>
                     <Heart size={15} fill={inWishlist ? "currentColor" : "none"} strokeWidth={1.5} />
                     {wishlistLoading ? "Saving…" : inWishlist ? "Wishlisted" : "Wishlist"}

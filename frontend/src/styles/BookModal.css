@@ -149,6 +149,21 @@
 .btn-primary:hover    { background: var(--accent-hover); }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
+.btn-preorder {
+  padding: 0.6rem 1.35rem;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-preorder:hover:not(:disabled) { background: #4338ca; }
+.btn-preorder:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .btn-secondary {
   padding: 0.6rem 1.35rem;
   background: none;

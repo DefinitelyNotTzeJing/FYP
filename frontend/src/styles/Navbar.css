@@ -283,6 +283,8 @@
 }
 .navbar__dropdown-item--danger { color: #c0392b; }
 .navbar__dropdown-item--danger:hover { background: #fef2f2; }
+.navbar__dropdown-item--admin { color: #b45309; font-weight: 600; }
+.navbar__dropdown-item--admin:hover { background: #fffbeb; }
 
 .navbar__dropdown-divider {
   height: 1px;

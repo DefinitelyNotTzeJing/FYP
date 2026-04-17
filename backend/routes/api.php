@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\AuthorController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\PreorderController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -80,6 +81,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);           // Get order history
     Route::get('/orders/{orderId}', [OrderController::class, 'show']);  // Get order details
 
+    // Pre-orders
+    Route::get('/preorders', [PreorderController::class, 'index']);
+    Route::post('/preorders', [PreorderController::class, 'store']);
+    Route::delete('/preorders/{preorderId}', [PreorderController::class, 'cancel']);
+
     // Book Rating and Reviews
     Route::post('/book-reviews', [BookReviewController::class, 'store']);                       // Submit a rating and review for a book
     Route::put('/book-reviews/{bookId}', [BookReviewController::class, 'update']);              // Update user's own rating/review
@@ -117,5 +123,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Orders management
         Route::get('/admin/orders', [OrderController::class, 'getAllOrders']);
         Route::put('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
+
+        // Pre-orders management
+        Route::get('/admin/preorders', [PreorderController::class, 'getAll']);
+        Route::put('/admin/preorders/{id}/status', [PreorderController::class, 'updateStatus']);
     });
 });

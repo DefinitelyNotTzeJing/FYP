@@ -606,7 +606,7 @@ function SuccessStep({ order, pricing, onDone }) {
 export default function CheckoutPage({
   onNavigateHome, onNavigateToAuth, onNavigateToProfile,
   onNavigateToWishlist, onNavigateToOrders, onNavigateToCart,
-  onNavigateToReviews, onNavigateToAdmin,
+  onNavigateToReviews, onNavigateToPreorders, onNavigateToAdmin,
 }) {
   const { token } = useAuth();
   const { items, loading: cartLoading } = useCart(token);
@@ -656,6 +656,7 @@ export default function CheckoutPage({
         onNavigateToOrders={onNavigateToOrders}
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
+        onNavigateToPreorders={onNavigateToPreorders}
         onNavigateToAdmin={onNavigateToAdmin}
         onNavigateHome={onNavigateHome}
         profileImage={profile?.profile?.profile_image_base64 || null}

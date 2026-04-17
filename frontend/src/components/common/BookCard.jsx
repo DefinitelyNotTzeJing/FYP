@@ -50,7 +50,7 @@ export default function BookCard({ book, onClick, index = 0 }) {
       <div className="book-card__info">
         {book.is_featured && <div className="badge badge--featured">Featured</div>}
         {book.available_quantity === 0 && (
-          <div className="badge badge--oos">Out of Stock</div>
+          <div className="badge badge--preorder">Pre-order</div>
         )}
         <div className="book-card__title">{book.book_name}</div>
         <div className="book-card__author">{book.author?.name}</div>

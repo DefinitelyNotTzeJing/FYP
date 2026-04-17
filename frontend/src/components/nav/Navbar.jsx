@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, User, Heart, Package, ShoppingCart, Star, LogOut, ChevronUp, ChevronDown } from "lucide-react";
+import { Search, User, Heart, Package, ShoppingCart, Star, LogOut, ChevronUp, ChevronDown, Clock, Settings } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import "../../styles/Navbar.css";
 
@@ -8,6 +8,7 @@ export default function Navbar({
   onNavigateToAuth, onNavigateToProfile,
   onNavigateToWishlist, onNavigateToOrders,
   onNavigateToCart, onNavigateToReviews,
+  onNavigateToPreorders,
   onNavigateHome,
   onNavigateToAdmin,
   cartCount = 0, wishlistCount = 0,
@@ -100,6 +101,19 @@ export default function Navbar({
                   <button className="navbar__dropdown-item" onClick={() => go(onNavigateToReviews)}>
                     <Star size={14} /> My Reviews
                   </button>
+
+                  <button className="navbar__dropdown-item" onClick={() => go(onNavigateToPreorders)}>
+                    <Clock size={14} /> Pre-orders
+                  </button>
+
+                  {user?.is_admin && (
+                    <>
+                      <div className="navbar__dropdown-divider" />
+                      <button className="navbar__dropdown-item navbar__dropdown-item--admin" onClick={() => go(onNavigateToAdmin)}>
+                        <Settings size={14} /> Admin Panel
+                      </button>
+                    </>
+                  )}
 
                   <div className="navbar__dropdown-divider" />
 
