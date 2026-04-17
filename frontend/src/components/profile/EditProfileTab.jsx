@@ -90,7 +90,7 @@ export default function EditProfileTab({ profile, onSave, pendingImage }) {
         </div>
       </div>
 
-      {field("payment_method", "Preferred Payment Method", "text", "e.g. Credit Card")}
+      {/* {field("payment_method", "Preferred Payment Method", "text", "e.g. Credit Card")} */}
 
       <div className="profile-field">
         <label className="profile-label">Address</label>
