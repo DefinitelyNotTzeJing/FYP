@@ -121,13 +121,15 @@
   .sidebar {
     position: fixed;
     top: 0;
-    right: -280px;
-    width: 260px;
+    right: -300px;
+    width: 280px;
     height: 100vh;
+    max-height: none;
     background: var(--white);
     z-index: 201;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 1rem;
     overflow-y: auto;
+    overflow-x: hidden;
     transition: right 0.25s ease;
     box-shadow: -4px 0 24px rgba(0,0,0,0.12);
   }
@@ -224,7 +226,7 @@
     position: fixed;
     bottom: calc(1.5rem + env(safe-area-inset-bottom));
     right: 1.25rem;
-    z-index: 199;
+    z-index: 300;
     align-items: center;
     gap: 0.4rem;
     background: var(--accent);

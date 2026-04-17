@@ -21,12 +21,12 @@ export default function Sidebar({
       {/* Floating filter button — mobile only */}
       <button
         className="sidebar-fab"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-controls="filter-sidebar"
       >
         <SlidersHorizontal size={16} />
-        Filters
+        {open ? "Close" : "Filters"}
       </button>
 
       {/* Backdrop — mobile only */}
