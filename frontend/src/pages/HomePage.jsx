@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiFetch } from "../utils/api";
 import Navbar from "../components/nav/Navbar";
 import Sidebar from "../components/nav/Sidebar";
@@ -174,14 +174,18 @@ export default function HomePage({
 
             {totalPages > 1 && (
               <div className="pagination">
-                <button className="pagination__btn" onClick={() => setPage((p) => p - 1)} disabled={page === 1} aria-label="Previous page">‹</button>
+                <button className="pagination__btn pagination__btn--nav" onClick={() => setPage((p) => p - 1)} disabled={page === 1} aria-label="Previous page">
+                  <ChevronLeft size={16} />
+                </button>
                 {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                   const p = totalPages <= 7 ? i + 1 : page <= 4 ? i + 1 : page >= totalPages - 3 ? totalPages - 6 + i : page - 3 + i;
                   return (
                     <button key={p} className={`pagination__btn${page === p ? " pagination__btn--active" : ""}`} onClick={() => setPage(p)} aria-label={`Page ${p}`} aria-current={page === p ? "page" : undefined}>{p}</button>
                   );
                 })}
-                <button className="pagination__btn" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} aria-label="Next page">›</button>
+                <button className="pagination__btn pagination__btn--nav" onClick={() => setPage((p) => p + 1)} disabled={page === totalPages} aria-label="Next page">
+                  <ChevronRight size={16} />
+                </button>
               </div>
             )}
           </div>
