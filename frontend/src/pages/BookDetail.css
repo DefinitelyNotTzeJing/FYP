@@ -1,0 +1,95 @@
+.book-detail-page {
+  min-height: 100vh;
+  padding: 7rem 0 4rem;
+  background:
+    radial-gradient(circle at top left, rgba(233, 69, 96, 0.08), transparent 28%),
+    linear-gradient(180deg, #fffaf7 0%, #ffffff 32%);
+}
+
+.book-detail-shell {
+  display: grid;
+  grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.book-detail-cover {
+  position: sticky;
+  top: 6.5rem;
+  padding: 1rem;
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 24px 60px rgba(22, 33, 62, 0.08);
+}
+
+.book-detail-cover img {
+  width: 100%;
+  display: block;
+  border-radius: 18px;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+}
+
+.book-detail-content {
+  padding: 1rem 0;
+}
+
+.book-detail-eyebrow {
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.book-detail-content h1 {
+  margin-bottom: 0.75rem;
+  font-size: clamp(2.2rem, 5vw, 4rem);
+}
+
+.book-detail-author {
+  margin-bottom: 1.25rem;
+  color: var(--gray);
+  font-size: 1.1rem;
+}
+
+.book-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.book-detail-meta span {
+  padding: 0.6rem 0.9rem;
+  border-radius: 999px;
+  background: #fff1ea;
+  color: var(--dark);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.book-detail-description {
+  max-width: 48rem;
+  color: #3d4350;
+  font-size: 1.05rem;
+}
+
+.book-detail-actions {
+  margin-top: 2rem;
+}
+
+@media (max-width: 900px) {
+  .book-detail-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .book-detail-cover {
+    position: static;
+    max-width: 22rem;
+    margin: 0 auto;
+  }
+}

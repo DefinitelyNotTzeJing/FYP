@@ -5,23 +5,24 @@ import { CartProvider } from './context/CartContext';
 
 // Layout
 import Navbar from './components/layout/Navbar';
+import CartDropZone from './components/layout/CartDropZone';
 // import Footer from './components/layout/Footer';
 
 // Pages
 import Home from './pages/Home';
-// import BookList from './pages/BookList';
-// import BookDetail from './pages/BookDetail';
-// import Cart from './pages/Cart';
-// import Checkout from './pages/Checkout';
-// import Login from './pages/Login';
-// import Register from './pages/Register';
-// import Profile from './pages/Profile';
-// import OrderHistory from './pages/OrderHistory';
+import BookList from './pages/BookList';
+import BookDetail from './pages/BookDetail';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Profile from './pages/Profile';
+import OrderHistory from './pages/OrderHistory';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 
 // Admin Pages
-// import AdminDashboard from './pages/admin/Dashboard';
-// import AdminBooks from './pages/admin/Books';
-// import AdminOrders from './pages/admin/Orders';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminBooks from './pages/AdminBooks';
+import AdminOrders from './pages/AdminOrders';
 
 // Protected Route
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -39,18 +40,18 @@ function App() {
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<Home />} />
-                {/* <Route path="/books" element={<BookList />} />
+                <Route path="/books" element={<BookList />} />
                 <Route path="/books/:id" element={<BookDetail />} />
                 <Route path="/cart" element={<Cart />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} /> */}
+                <Route path="/register" element={<Register />} />
 
                 {/* Protected Routes */}
                 <Route
                   path="/checkout"
                   element={
                     <ProtectedRoute>
-                      {/* <Checkout /> */}
+                      <Checkout />
                     </ProtectedRoute>
                   }
                 />
@@ -58,7 +59,7 @@ function App() {
                   path="/profile"
                   element={
                     <ProtectedRoute>
-                      {/* <Profile /> */}
+                      <Profile />
                     </ProtectedRoute>
                   }
                 />
@@ -66,7 +67,7 @@ function App() {
                   path="/orders"
                   element={
                     <ProtectedRoute>
-                      {/* <OrderHistory /> */}
+                      <OrderHistory />
                     </ProtectedRoute>
                   }
                 />
@@ -76,7 +77,7 @@ function App() {
                   path="/admin"
                   element={
                     <ProtectedRoute adminOnly>
-                      {/* <AdminDashboard /> */}
+                      <AdminDashboard />
                     </ProtectedRoute>
                   }
                 />
@@ -84,7 +85,7 @@ function App() {
                   path="/admin/books"
                   element={
                     <ProtectedRoute adminOnly>
-                      {/* <AdminBooks /> */}
+                      <AdminBooks />
                     </ProtectedRoute>
                   }
                 />
@@ -92,12 +93,13 @@ function App() {
                   path="/admin/orders"
                   element={
                     <ProtectedRoute adminOnly>
-                      {/* <AdminOrders /> */}
+                      <AdminOrders />
                     </ProtectedRoute>
                   }
                 />
               </Routes>
             </main>
+            <CartDropZone />
             {/* <Footer /> */}
           </div>
         </Router>

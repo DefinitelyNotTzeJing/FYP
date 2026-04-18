@@ -16,8 +16,8 @@ const Home = () => {
           bookService.getBooks({ featured: true, limit: 6 }),
           bookService.getBooks({ sort: 'newest', limit: 8 })
         ]);
-        setFeaturedBooks(featured.data || []);
-        setNewArrivals(arrivals.data || []);
+        setFeaturedBooks(featured.items || []);
+        setNewArrivals(arrivals.items || []);
       } catch (error) {
         console.error('Error fetching books:', error);
       } finally {

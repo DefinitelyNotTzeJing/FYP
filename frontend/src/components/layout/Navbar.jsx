@@ -8,6 +8,8 @@ const Navbar = () => {
   const { user, logout, isAdmin } = useAuth();
   const { getCartCount } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const displayName = user?.displayName || user?.username || user?.email || 'User';
+  const avatarLabel = displayName.charAt(0).toUpperCase();
 
   return (
     <nav className="navbar">
@@ -35,8 +37,9 @@ const Navbar = () => {
         <div className="navbar-actions">
           <Link to="/cart" className="nav-icon cart-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M9 2L7.17 4H4a2 2 0 00-2 2v13a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-3.17L15 2H9z"/>
-              <circle cx="12" cy="13" r="4"/>
+              <circle cx="9" cy="19" r="1.8"/>
+              <circle cx="17" cy="19" r="1.8"/>
+              <path d="M3 4h2l2.2 9.2a1 1 0 0 0 1 .8h8.8a1 1 0 0 0 1-.78L21 7H7.4"/>
             </svg>
             {getCartCount() > 0 && (
               <span className="cart-badge">{getCartCount()}</span>
@@ -46,10 +49,8 @@ const Navbar = () => {
           {user ? (
             <div className="user-menu">
               <button className="user-button">
-                <span className="user-avatar">
-                  {user.name.charAt(0).toUpperCase()}
-                </span>
-                <span className="user-name">{user.name}</span>
+                <span className="user-avatar">{avatarLabel}</span>
+                <span className="user-name">{displayName}</span>
               </button>
               <div className="dropdown-menu">
                 <Link to="/profile" className="dropdown-item">

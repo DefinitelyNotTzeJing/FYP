@@ -1,0 +1,59 @@
+.book-list-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #fff9f5 0%, #ffffff 28%);
+}
+
+.book-list-hero {
+  padding: 7rem 0 2.5rem;
+}
+
+.book-list-eyebrow {
+  margin-bottom: 0.75rem;
+  color: var(--primary);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.book-list-title {
+  margin-bottom: 1rem;
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+}
+
+.book-list-subtitle {
+  max-width: 42rem;
+  color: var(--gray);
+  font-size: 1.05rem;
+}
+
+.book-list-section {
+  padding: 1rem 0 4rem;
+}
+
+.book-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.75rem;
+}
+
+.book-list-empty {
+  max-width: 36rem;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.book-list-empty h2 {
+  margin-bottom: 0.75rem;
+}
+
+@media (max-width: 768px) {
+  .book-list-hero {
+    padding-top: 6rem;
+  }
+
+  .book-list-grid {
+    grid-template-columns: 1fr;
+  }
+}

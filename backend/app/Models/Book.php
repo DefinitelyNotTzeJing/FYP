@@ -74,6 +74,11 @@ class Book extends Model
         return $this->available_quantity > 0;
     }
 
+    public function scopeInStock($query)
+    {
+        return $query->where('available_quantity', '>', 0);
+    }
+
     // Helper method: Calculate average rating
     public function updateRating()
     {
