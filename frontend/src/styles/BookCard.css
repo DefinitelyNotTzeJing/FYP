@@ -4,6 +4,121 @@
   overflow: hidden;
   border: 1px solid var(--border);
   cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+
+/* ── Hold states ── */
+.book-card--holding {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+
+.book-card--armed {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent), 0 8px 32px rgba(200,80,42,0.25);
+  animation: card-armed-pulse 1s ease-in-out infinite;
+}
+
+@keyframes card-armed-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px var(--accent), 0 8px 32px rgba(200,80,42,0.2); }
+  50%       { box-shadow: 0 0 0 5px var(--accent), 0 12px 40px rgba(200,80,42,0.35); }
+}
+
+/* ── Cover wrapper (needed for overlay positioning) ── */
+.book-card__cover-wrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ── Progress fill ── */
+.book-card__fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(200, 80, 42, 0.72) 0%,
+    rgba(200, 80, 42, 0.35) 60%,
+    rgba(200, 80, 42, 0.08) 100%
+  );
+  transform-origin: bottom;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── Swipe hint overlay (armed state) ── */
+.book-card__hints {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  pointer-events: none;
+  padding: 0.5rem;
+}
+
+.book-card__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: white;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, transform 0.15s;
+  text-transform: uppercase;
+}
+
+.book-card__hint--up   { align-self: center; }
+.book-card__hint--down { align-self: center; }
+
+.book-card__hint--active {
+  background: var(--accent);
+  transform: scale(1.08);
+}
+
+.book-card__hint-arrow {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+/* ── Action feedback ── */
+.book-card__action-feedback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: white;
+  text-align: center;
+  padding: 0.5rem;
+  animation: feedback-pop 0.35s ease;
+}
+
+.book-card__action-feedback--cart {
+  background: rgba(22, 163, 74, 0.88);
+}
+
+.book-card__action-feedback--wishlist {
+  background: rgba(200, 80, 42, 0.88);
+}
+
+.book-card__action-feedback--oos {
+  background: rgba(100, 100, 100, 0.88);
+}
+
+@keyframes feedback-pop {
+  0%   { opacity: 0; transform: scale(0.85); }
+  60%  { opacity: 1; transform: scale(1.05); }
+  100% { transform: scale(1); }
 }
 
 /* Scroll-reveal states */
@@ -49,6 +164,8 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .book-card__info {

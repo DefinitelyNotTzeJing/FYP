@@ -275,7 +275,20 @@ export default function HomePage({
             ) : (
               <div className="book-grid">
                 {books.map((book, i) => (
-                  <BookCard key={book.book_id} book={book} onClick={setSelectedBook} index={i} />
+                  <BookCard
+                    key={book.book_id}
+                    book={book}
+                    onClick={setSelectedBook}
+                    index={i}
+                    onAddToCart={(b) => {
+                      if (!token) { onNavigateToAuth?.(); return; }
+                      cartHook.add(b.book_id);
+                    }}
+                    onAddToWishlist={(b) => {
+                      if (!token) { onNavigateToAuth?.(); return; }
+                      wishlistHook.add(b.book_id);
+                    }}
+                  />
                 ))}
               </div>
             )}
