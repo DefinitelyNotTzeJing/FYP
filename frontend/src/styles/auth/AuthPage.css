@@ -8,7 +8,7 @@
 }
 
 .auth-page__panel {
-  background: var(--ink);
+  background: #1a1a18;   /* always dark — never flips with theme */
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -24,37 +24,125 @@
     radial-gradient(ellipse at 20% 50%, rgba(200,80,42,0.18) 0%, transparent 60%),
     radial-gradient(ellipse at 80% 20%, rgba(200,80,42,0.10) 0%, transparent 50%);
   pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Gradient overlay (sits above books, below logo/quote) ── */
+.auth-page__panel-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(26,26,24,0.55)  0%,
+      rgba(26,26,24,0.15) 25%,
+      rgba(26,26,24,0.15) 55%,
+      rgba(26,26,24,0.80) 78%,
+      rgba(26,26,24,0.97) 100%
+    );
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ── Book scatter layer ── */
+.auth-page__books {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.auth-page__book-drift {
+  position: absolute;
+  opacity: 0;
+  animation:
+    book-enter 0.65s ease forwards var(--enter-delay, 0s),
+    book-drift var(--drift-dur, 6s) ease-in-out infinite alternate calc(var(--enter-delay, 0s) + 0.65s);
+}
+
+.auth-page__book-cover {
+  aspect-ratio: 2 / 3;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 24px rgba(0,0,0,0.45),
+    0 2px 6px  rgba(0,0,0,0.3);
+}
+
+.auth-page__book-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+@keyframes book-enter {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes book-drift {
+  from { transform: translateY(0px); }
+  to   { transform: translateY(-11px); }
 }
 
 .auth-page__panel-logo {
   font-family: var(--font-display);
   font-size: 1.6rem;
   font-weight: 600;
-  color: var(--paper);
+  color: #f0ece4;          /* always light */
   cursor: pointer;
   position: relative;
-  z-index: 1;
+  z-index: 3;
 }
 
 .auth-page__panel-logo span { color: var(--accent); font-style: italic; }
 
-.auth-page__panel-quote { position: relative; z-index: 1; }
+.auth-page__panel-quote { position: relative; z-index: 3; }
 
 .auth-page__panel-quote blockquote {
   font-family: var(--font-display);
   font-size: 1.4rem;
   font-style: italic;
-  color: var(--paper);
+  color: #f0ece4;          /* always light cream */
   line-height: 1.4;
   margin-bottom: 0.85rem;
-  opacity: 0.92;
 }
 
 .auth-page__panel-quote cite {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: rgba(240,236,228,0.55);   /* always muted light */
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+/* ── Theme toggle button ── */
+.auth-page__form-area { position: relative; }
+
+.auth-theme-toggle {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--white);
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  z-index: 10;
+}
+
+.auth-theme-toggle:hover {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
 }
 
 .auth-page__form-area {
