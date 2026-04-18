@@ -213,7 +213,12 @@ export default function HomePage({
       <main className="home">
         {/* Hero — only on default view with featured books */}
         {isDefaultView && featuredBooks.length > 0 && (
-          <FeaturedHero books={featuredBooks} onBookClick={setSelectedBook} />
+          <FeaturedHero
+            books={featuredBooks}
+            onBookClick={setSelectedBook}
+            onAddToCart={(b) => { if (!token) { onNavigateToAuth?.(); return; } cartHook.add(b.book_id); }}
+            onAddToWishlist={(b) => { if (!token) { onNavigateToAuth?.(); return; } wishlistHook.add(b.book_id); }}
+          />
         )}
 
         <div className="home__layout">
@@ -235,7 +240,12 @@ export default function HomePage({
 
             {/* Featured row — only on default view */}
             {isDefaultView && featuredBooks.length > 0 && (
-              <FeaturedRow books={featuredBooks} onBookClick={setSelectedBook} />
+              <FeaturedRow
+                books={featuredBooks}
+                onBookClick={setSelectedBook}
+                onAddToCart={(b) => { if (!token) { onNavigateToAuth?.(); return; } cartHook.add(b.book_id); }}
+                onAddToWishlist={(b) => { if (!token) { onNavigateToAuth?.(); return; } wishlistHook.add(b.book_id); }}
+              />
             )}
 
             {/* Author results — only shown when searching */}

@@ -14,7 +14,7 @@ export function useBooks({ search, selectedCategory, sortBy, sortOrder, page, sh
     // "featured__desc" sorts all books with featured ones first
     const isFeaturedSort = sortBy === "featured";
     const params = new URLSearchParams({
-      per_page: 12,
+      per_page: 15,
       page,
       sort_by: isFeaturedSort ? "is_featured" : sortBy,
       sort_order: "desc",
