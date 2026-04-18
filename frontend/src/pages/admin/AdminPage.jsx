@@ -8,7 +8,7 @@ import { useProfile } from "../../hooks/useProfile";
 
 const S = {
   page:    { maxWidth: 1100, margin: "0 auto", padding: "2rem 1.5rem" },
-  tabs:    { display: "flex", gap: "0.25rem", marginBottom: "2rem", borderBottom: "2px solid var(--border)", paddingBottom: "0" },
+  tabs:    { display: "flex", gap: "0.25rem", marginBottom: "2rem", borderBottom: "2px solid var(--border)", paddingBottom: "0", overflowX: "auto", scrollbarWidth: "none" },
   tab:     (active) => ({
     padding: "0.6rem 1.25rem", border: "none", background: "none",
     fontFamily: "var(--font-display)", fontSize: "0.9rem", fontWeight: 600,
@@ -16,10 +16,10 @@ const S = {
     borderBottom: active ? "2px solid var(--ink)" : "2px solid transparent",
     marginBottom: "-2px", transition: "color 0.15s",
   }),
-  card:    { background: "var(--white)", border: "1px solid var(--border)", borderRadius: "10px", overflow: "hidden" },
+  card:    { background: "var(--white)", border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" },
   th:      { padding: "0.65rem 1rem", fontSize: "0.73rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", textAlign: "left", background: "var(--paper)", borderBottom: "1px solid var(--border)" },
   td:      { padding: "0.75rem 1rem", fontSize: "0.88rem", borderBottom: "1px solid var(--border)", verticalAlign: "middle" },
-  btnPri:  { padding: "0.5rem 1.1rem", background: "var(--ink)", color: "white", border: "none", borderRadius: "7px", fontFamily: "var(--font-body)", fontSize: "0.83rem", fontWeight: 600, cursor: "pointer" },
+  btnPri:  { padding: "0.5rem 1.1rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "7px", fontFamily: "var(--font-body)", fontSize: "0.83rem", fontWeight: 600, cursor: "pointer" },
   btnSec:  { padding: "0.45rem 0.9rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "7px", fontFamily: "var(--font-body)", fontSize: "0.8rem", cursor: "pointer", color: "var(--ink)" },
   btnDang: { padding: "0.45rem 0.9rem", background: "none", border: "1.5px solid #fca5a5", borderRadius: "7px", fontFamily: "var(--font-body)", fontSize: "0.8rem", cursor: "pointer", color: "#dc2626" },
   input:   { width: "100%", padding: "0.55rem 0.8rem", border: "1.5px solid var(--border)", borderRadius: "7px", fontFamily: "var(--font-body)", fontSize: "0.88rem", background: "var(--white)", color: "var(--ink)", boxSizing: "border-box" },
@@ -328,7 +328,7 @@ function BooksTab({ token }) {
         <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", marginTop: "1.25rem" }}>
           <button style={S.btnSec} disabled={page === 1} onClick={() => { setPage(page - 1); load(page - 1, search); }}>‹</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-            <button key={p} style={{ ...S.btnSec, background: p === page ? "var(--ink)" : "none", color: p === page ? "white" : "var(--ink)", borderColor: p === page ? "var(--ink)" : "var(--border)" }}
+            <button key={p} style={{ ...S.btnSec, background: p === page ? "var(--ink)" : "none", color: p === page ? "var(--paper)" : "var(--ink)", borderColor: p === page ? "var(--ink)" : "var(--border)" }}
               onClick={() => { setPage(p); load(p, search); }}>{p}</button>
           ))}
           <button style={S.btnSec} disabled={page === totalPages} onClick={() => { setPage(page + 1); load(page + 1, search); }}>›</button>
@@ -865,13 +865,13 @@ export default function AdminPage({
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.6rem", fontWeight: 700, margin: 0 }}>
             Admin Panel
           </h1>
-          <span style={{ fontSize: "0.75rem", background: "var(--ink)", color: "white", padding: "0.2rem 0.6rem", borderRadius: "20px", fontWeight: 600 }}>
+          <span style={{ fontSize: "0.75rem", background: "var(--ink)", color: "var(--paper)", padding: "0.2rem 0.6rem", borderRadius: "20px", fontWeight: 600 }}>
             Admin
           </span>
         </div>
 
         <div style={S.tabs}>
-          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"], ["orders", "🧾 Orders"], ["preorders", "🔔 Pre-orders"]].map(([key, label]) => (
+          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"], ["preorders", "🔔 Pre-orders"], ["orders", "🧾 Orders"]].map(([key, label]) => (
             <button key={key} style={S.tab(tab === key)} onClick={() => setTab(key)}>{label}</button>
           ))}
         </div>

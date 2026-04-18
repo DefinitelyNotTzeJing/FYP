@@ -205,6 +205,7 @@ export default function HomePage({
         onNavigateToCart={onNavigateToCart}
         onNavigateToReviews={onNavigateToReviews}
         onNavigateToPreorders={onNavigateToPreorders}
+        onNavigateToAdmin={onNavigateToAdmin}
         profileImage={profileImage}
         onNavigateHome={onNavigateHome}
       />
