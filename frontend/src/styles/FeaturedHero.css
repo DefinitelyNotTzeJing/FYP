@@ -279,13 +279,22 @@
 @media (max-width: 640px) {
   .hero { margin-bottom: 1.5rem; border-radius: var(--radius-md); }
   .hero__slide {
-    grid-template-columns: 1fr;
-    padding: 2rem 1.5rem 3.5rem;
+    grid-template-columns: 1fr 96px;
+    padding: 1.5rem 1.25rem 3rem 1.5rem;
     min-height: auto;
-    gap: 0;
+    gap: 1rem;
+    align-items: center;
   }
-  .hero__cover-wrap { display: none; }
-  .hero__title { font-size: 1.5rem; }
+  .hero__cover-wrap {
+    padding: 0.5rem 0;
+    justify-content: flex-end;
+  }
+  .hero__cover {
+    width: 86px;
+    transform: rotate(1.5deg);
+  }
+  .hero__title { font-size: 1.3rem; }
+  .hero__desc { display: none; }
   .hero__arrow { display: none; }
   .hero__dots { left: 1.5rem; }
 }

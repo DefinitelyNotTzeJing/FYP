@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import "../../styles/FeaturedHero.css";
 
+const GRACE_MS    = 1000;
+const GRACE_MOVE  = 8;
 const HOLD_MS     = 3000;
 const SWIPE_PX    = 50;
 const MOVE_CANCEL = 14;
-const TAP_MAX_MS  = 280;
 
 function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
   const phaseRef      = useRef("idle");
@@ -13,29 +14,27 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
   const [progress, setProgress] = useState(0);
   const [swipeDir, setSwipeDir] = useState(null);
   const [feedback, setFeedback] = useState(null);
-  const holdStartTime = useRef(null);
-  const holdPos       = useRef(null);
-  const armedPos      = useRef(null);
-  const rafId         = useRef(null);
+  const holdPos    = useRef(null);
+  const armedPos   = useRef(null);
+  const rafId      = useRef(null);
+  const graceTimer = useRef(null);
   const blockClick    = useRef(false);
 
   const updatePhase = (p) => { phaseRef.current = p; setPhase(p); };
 
   const cancelHold = useCallback((wasIntentional = false) => {
     if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = null; }
-    holdStartTime.current = null; holdPos.current = null; armedPos.current = null;
+    if (graceTimer.current) { clearTimeout(graceTimer.current); graceTimer.current = null; }
+    holdPos.current = null; armedPos.current = null;
     if (wasIntentional) blockClick.current = true;
     setProgress(0); setSwipeDir(null); updatePhase("idle");
   }, []);
 
-  function startHold(x, y) {
-    if (phaseRef.current !== "idle") return;
-    holdPos.current = { x, y }; armedPos.current = null;
-    holdStartTime.current = performance.now();
-    updatePhase("holding");
+  function startFill() {
+    const fillStart = performance.now();
     function tick(now) {
       if (phaseRef.current !== "holding") return;
-      const p = Math.min((now - holdStartTime.current) / HOLD_MS, 1);
+      const p = Math.min((now - fillStart) / HOLD_MS, 1);
       setProgress(p);
       if (p >= 1) { armedPos.current = { ...holdPos.current }; updatePhase("armed"); }
       else { rafId.current = requestAnimationFrame(tick); }
@@ -43,8 +42,22 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
     rafId.current = requestAnimationFrame(tick);
   }
 
+  function startHold(x, y) {
+    if (phaseRef.current !== "idle") return;
+    holdPos.current = { x, y }; armedPos.current = null;
+    updatePhase("grace");
+    graceTimer.current = setTimeout(() => {
+      if (phaseRef.current !== "grace") return;
+      updatePhase("holding");
+      startFill();
+    }, GRACE_MS);
+  }
+
   function onMove(x, y) {
-    if (phaseRef.current === "holding") {
+    if (phaseRef.current === "grace") {
+      const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > GRACE_MOVE) cancelHold(false);
+    } else if (phaseRef.current === "holding") {
       const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
       if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL) cancelHold(true);
     } else if (phaseRef.current === "armed" && armedPos.current) {
@@ -54,10 +67,11 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
   }
 
   function onRelease(x, y) {
-    if (phaseRef.current === "holding") {
-      const dur = performance.now() - holdStartTime.current;
-      cancelHold(dur > TAP_MAX_MS);
-      if (dur <= TAP_MAX_MS) onBookClick?.(book);
+    if (phaseRef.current === "grace") {
+      cancelHold(false);
+      onBookClick?.(book);
+    } else if (phaseRef.current === "holding") {
+      cancelHold(true);
     } else if (phaseRef.current === "armed" && armedPos.current) {
       const dy = y - armedPos.current.y;
       if (dy < -SWIPE_PX)     doAction("cart");
@@ -82,20 +96,23 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
     }, 1200);
   }
 
-  const onTouchStart = (e) => { e.preventDefault(); const t = e.touches[0]; startHold(t.clientX, t.clientY); };
+  const onTouchStart = (e) => { const t = e.touches[0]; startHold(t.clientX, t.clientY); };
   const onTouchMove  = (e) => { const t = e.touches[0]; onMove(t.clientX, t.clientY); };
-  const onTouchEnd   = (e) => { const t = e.changedTouches[0]; onRelease(t.clientX, t.clientY); };
+  const onTouchEnd   = (e) => { if (phaseRef.current !== "idle") e.preventDefault(); const t = e.changedTouches[0]; onRelease(t.clientX, t.clientY); };
   const onMouseDown  = (e) => { if (e.button === 0) startHold(e.clientX, e.clientY); };
   const onMouseMoveH = (e) => onMove(e.clientX, e.clientY);
   const onMouseUp    = (e) => { if (e.button === 0) onRelease(e.clientX, e.clientY); };
-  const onMouseLeave = ()  => { if (phaseRef.current === "holding") cancelHold(true); };
+  const onMouseLeave = ()  => { if (phaseRef.current === "holding" || phaseRef.current === "grace") cancelHold(true); };
   const handleClick  = ()  => {
     if (blockClick.current) { blockClick.current = false; return; }
     if (phaseRef.current !== "idle") return;
     onBookClick?.(book);
   };
 
-  useEffect(() => () => { if (rafId.current) cancelAnimationFrame(rafId.current); }, []);
+  useEffect(() => () => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    if (graceTimer.current) clearTimeout(graceTimer.current);
+  }, []);
 
   const isHolding  = phase === "holding";
   const isArmed    = phase === "armed";
@@ -114,7 +131,7 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
       onTouchEnd={onTouchEnd}
       onTouchCancel={() => cancelHold(true)}
       onContextMenu={(e) => e.preventDefault()}
-      style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
+      style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: (phase === "holding" || phase === "armed" || phase === "feedback") ? "none" : "pan-x pan-y" }}
     >
       <div className="fcard__cover">
         {book.cover_image_url

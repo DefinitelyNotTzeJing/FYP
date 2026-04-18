@@ -2,32 +2,36 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import Stars from "../stars/Stars";
 import "../../styles/BookCard.css";
 
-const HOLD_MS      = 3000;
+const GRACE_MS     = 1000; // wait before fill starts — scroll intent window
+const GRACE_MOVE   = 8;    // px movement during grace cancels gesture
+const HOLD_MS      = 3000; // fill duration after grace
 const SWIPE_PX     = 50;
-const MOVE_CANCEL  = 14;  // px drift allowed during hold
-const TAP_MAX_MS   = 280; // treat as tap if released this quickly
+const MOVE_CANCEL  = 14;   // px drift allowed during fill
+const TAP_MAX_MS   = 280;
 
 export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, index = 0 }) {
   const cardRef = useRef(null);
 
-  // phase: idle | holding | armed | feedback
+  // phase: idle | grace | holding | armed | feedback
   const phaseRef  = useRef("idle");
   const [phase,    setPhase]    = useState("idle");
-  const [progress, setProgress] = useState(0);          // 0-1 during hold
-  const [swipeDir, setSwipeDir] = useState(null);       // 'up' | 'down'
-  const [feedback, setFeedback] = useState(null);       // 'cart' | 'wishlist'
-  const [visible,  setVisible]  = useState(false);      // scroll-reveal
+  const [progress, setProgress] = useState(0);
+  const [swipeDir, setSwipeDir] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [visible,  setVisible]  = useState(false);
 
   const holdStartTime = useRef(null);
-  const holdPos       = useRef(null);  // {x,y} where finger/mouse pressed
-  const armedPos      = useRef(null);  // reference point once armed
+  const holdPos       = useRef(null);
+  const armedPos      = useRef(null);
   const rafId         = useRef(null);
-  const blockClick    = useRef(false); // prevents click firing after a hold attempt
+  const graceTimer    = useRef(null);
+  const blockClick    = useRef(false);
 
   const updatePhase = (p) => { phaseRef.current = p; setPhase(p); };
 
   const cancelHold = useCallback((wasIntentional = false) => {
-    if (rafId.current) { cancelAnimationFrame(rafId.current); rafId.current = null; }
+    if (rafId.current)   { cancelAnimationFrame(rafId.current); rafId.current = null; }
+    if (graceTimer.current) { clearTimeout(graceTimer.current); graceTimer.current = null; }
     holdStartTime.current = null;
     holdPos.current  = null;
     armedPos.current = null;
@@ -37,16 +41,11 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     updatePhase("idle");
   }, []);
 
-  function startHold(x, y) {
-    if (phaseRef.current !== "idle") return;
-    holdPos.current      = { x, y };
-    armedPos.current     = null;
-    holdStartTime.current = performance.now();
-    updatePhase("holding");
-
+  function startFill() {
+    const fillStart = performance.now();
     function tick(now) {
       if (phaseRef.current !== "holding") return;
-      const p = Math.min((now - holdStartTime.current) / HOLD_MS, 1);
+      const p = Math.min((now - fillStart) / HOLD_MS, 1);
       setProgress(p);
       if (p >= 1) {
         armedPos.current = { ...holdPos.current };
@@ -58,8 +57,26 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     rafId.current = requestAnimationFrame(tick);
   }
 
+  function startHold(x, y) {
+    if (phaseRef.current !== "idle") return;
+    holdPos.current      = { x, y };
+    armedPos.current     = null;
+    holdStartTime.current = performance.now();
+    updatePhase("grace");
+
+    graceTimer.current = setTimeout(() => {
+      if (phaseRef.current !== "grace") return;
+      updatePhase("holding");
+      startFill();
+    }, GRACE_MS);
+  }
+
   function onMove(x, y) {
-    if (phaseRef.current === "holding") {
+    if (phaseRef.current === "grace") {
+      const dx = x - holdPos.current.x;
+      const dy = y - holdPos.current.y;
+      if (Math.sqrt(dx * dx + dy * dy) > GRACE_MOVE) cancelHold(false);
+    } else if (phaseRef.current === "holding") {
       const dx = x - holdPos.current.x;
       const dy = y - holdPos.current.y;
       if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL) cancelHold(true);
@@ -70,15 +87,17 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
   }
 
   function onRelease(x, y) {
-    if (phaseRef.current === "holding") {
-      const duration = performance.now() - holdStartTime.current;
-      cancelHold(duration > TAP_MAX_MS);
-      if (duration <= TAP_MAX_MS) onClick?.(book); // quick tap → open modal
+    if (phaseRef.current === "grace") {
+      // released before fill started — treat as tap
+      cancelHold(false);
+      onClick?.(book);
+    } else if (phaseRef.current === "holding") {
+      cancelHold(true); // held long enough that releasing is not a tap
     } else if (phaseRef.current === "armed" && armedPos.current) {
       const dy = y - armedPos.current.y;
-      if (dy < -SWIPE_PX)      doAction("cart");
-      else if (dy > SWIPE_PX)  doAction("wishlist");
-      else                     cancelHold(true);
+      if (dy < -SWIPE_PX)     doAction("cart");
+      else if (dy > SWIPE_PX) doAction("wishlist");
+      else                    cancelHold(true);
     }
   }
 
@@ -104,20 +123,17 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     }, 1200);
   }
 
-  // ── Touch handlers ─────────────────────────────────────────────────────────
-  const onTouchStart = (e) => {
-    e.preventDefault(); // prevent ghost click on touch devices
-    const t = e.touches[0];
-    startHold(t.clientX, t.clientY);
-  };
+  // ── Touch handlers ──────────────────────────────────────────────────────────
+  // No preventDefault on touchStart — lets browser scroll during grace period
+  const onTouchStart = (e) => { const t = e.touches[0]; startHold(t.clientX, t.clientY); };
   const onTouchMove  = (e) => { const t = e.touches[0]; onMove(t.clientX, t.clientY); };
-  const onTouchEnd   = (e) => { const t = e.changedTouches[0]; onRelease(t.clientX, t.clientY); };
+  const onTouchEnd   = (e) => { if (phaseRef.current !== "idle") e.preventDefault(); const t = e.changedTouches[0]; onRelease(t.clientX, t.clientY); };
 
-  // ── Mouse handlers ─────────────────────────────────────────────────────────
+  // ── Mouse handlers ──────────────────────────────────────────────────────────
   const onMouseDown  = (e) => { if (e.button === 0) startHold(e.clientX, e.clientY); };
   const onMouseMove  = (e) => onMove(e.clientX, e.clientY);
   const onMouseUp    = (e) => { if (e.button === 0) onRelease(e.clientX, e.clientY); };
-  const onMouseLeave = ()  => { if (phaseRef.current === "holding") cancelHold(true); };
+  const onMouseLeave = ()  => { if (phaseRef.current !== "idle" && phaseRef.current !== "feedback") cancelHold(true); };
 
   const handleClick = () => {
     if (blockClick.current) { blockClick.current = false; return; }
@@ -125,7 +141,7 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     onClick?.(book);
   };
 
-  // ── Intersection observer (scroll reveal) ─────────────────────────────────
+  // ── Intersection observer (scroll reveal) ──────────────────────────────────
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
@@ -144,18 +160,22 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     return () => obs.disconnect();
   }, [index]);
 
-  useEffect(() => () => { if (rafId.current) cancelAnimationFrame(rafId.current); }, []);
+  useEffect(() => () => {
+    if (rafId.current) cancelAnimationFrame(rafId.current);
+    if (graceTimer.current) clearTimeout(graceTimer.current);
+  }, []);
 
   const isHolding  = phase === "holding";
   const isArmed    = phase === "armed";
   const isFeedback = phase === "feedback";
+  const committed  = phase === "holding" || phase === "armed" || phase === "feedback";
 
   return (
     <div
       ref={cardRef}
       className={[
         "book-card",
-        visible    ? "book-card--visible"       : "book-card--hidden",
+        visible    ? "book-card--visible"  : "book-card--hidden",
         isHolding  && "book-card--holding",
         isArmed    && "book-card--armed",
         isFeedback && "book-card--feedback-state",
@@ -170,13 +190,16 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
       onTouchEnd={onTouchEnd}
       onTouchCancel={() => cancelHold(true)}
       onContextMenu={(e) => e.preventDefault()}
-      style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
+      style={{
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        touchAction: committed ? "none" : "pan-y",
+      }}
     >
-      {/* ── Cover with overlay ───────────────────────────────────────────── */}
       <div className="book-card__cover-wrap">
         {book.cover_image_url ? (
           <div className="book-card__cover">
-            <img src={book.cover_image_url} alt={book.book_name} loading="lazy" draggable="false" />
+            <img src={book.cover_image_url} alt={book.book_name} loading="lazy" draggable="false" style={{ pointerEvents: "none" }} />
           </div>
         ) : (
           <div className="book-card__cover">
@@ -189,15 +212,10 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
           </div>
         )}
 
-        {/* Progress fill — rises from bottom */}
         {(isHolding || isArmed) && (
-          <div
-            className="book-card__fill"
-            style={{ transform: `scaleY(${isArmed ? 1 : progress})` }}
-          />
+          <div className="book-card__fill" style={{ transform: `scaleY(${isArmed ? 1 : progress})` }} />
         )}
 
-        {/* Swipe hints shown when armed */}
         {isArmed && (
           <div className="book-card__hints">
             <div className={`book-card__hint book-card__hint--up${swipeDir === "up" ? " book-card__hint--active" : ""}`}>
@@ -211,7 +229,6 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
           </div>
         )}
 
-        {/* Action feedback */}
         {isFeedback && (
           <div className={`book-card__action-feedback book-card__action-feedback--${feedback}`}>
             {feedback === "cart" ? "✓ Added to Cart" : feedback === "wishlist" ? "♥ Wishlisted" : "Out of Stock"}
@@ -219,7 +236,6 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
         )}
       </div>
 
-      {/* ── Book info ────────────────────────────────────────────────────── */}
       <div className="book-card__info">
         {book.is_featured && <div className="badge badge--featured">Featured</div>}
         {book.available_quantity === 0 && <div className="badge badge--preorder">Pre-order</div>}
