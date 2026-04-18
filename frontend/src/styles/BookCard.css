@@ -45,47 +45,35 @@
   will-change: transform;
 }
 
-/* ── Swipe hint overlay (armed state) ── */
+/* ── Swipe hint overlay (armed state) — 3 equal zones ── */
 .book-card__hints {
   position: absolute;
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   pointer-events: none;
-  padding: 0.5rem;
 }
 
 .book-card__hint {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.3rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: white;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
-  transition: background 0.15s, transform 0.15s;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(0, 0, 0, 0.28);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background 0.1s, color 0.1s;
   text-transform: uppercase;
 }
 
-.book-card__hint--up   { align-self: center; }
-.book-card__hint--down { align-self: center; }
+.book-card__hint:last-child { border-bottom: none; }
 
-.book-card__hint--active {
-  background: var(--accent);
-  transform: scale(1.08);
-}
-
-.book-card__hint-arrow {
-  font-size: 0.9rem;
-  line-height: 1;
-}
+.book-card__hint--active               { background: var(--accent); color: white; }
+.book-card__hint--mid.book-card__hint--active { background: rgba(60, 60, 60, 0.82); color: white; }
 
 /* ── Action feedback ── */
 .book-card__action-feedback {

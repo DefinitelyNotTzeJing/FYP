@@ -165,29 +165,29 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   pointer-events: none;
-  padding: 0.5rem;
 }
 
 .hero__hint {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.3rem 0.5rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: white;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(4px);
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.28);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   text-transform: uppercase;
-  transition: background 0.15s;
+  transition: background 0.1s, color 0.1s;
 }
 
-.hero__hint--active { background: var(--accent); }
+.hero__hint:last-child { border-bottom: none; }
+
+.hero__hint--active               { background: var(--accent); color: white; }
+.hero__hint--mid.hero__hint--active { background: rgba(60,60,60,0.82); color: white; }
 
 .hero__feedback {
   position: absolute;
@@ -468,29 +468,29 @@
   inset: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   pointer-events: none;
-  padding: 0.3rem;
 }
 
 .fcard__hint {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0.25rem 0.4rem;
-  border-radius: var(--radius-sm);
   font-family: var(--font-body);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: white;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
+  letter-spacing: 0.05em;
+  color: rgba(255,255,255,0.75);
+  background: rgba(0,0,0,0.28);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
   text-transform: uppercase;
-  transition: background 0.15s;
+  transition: background 0.1s, color 0.1s;
 }
 
-.fcard__hint--active { background: var(--accent); }
+.fcard__hint:last-child { border-bottom: none; }
+
+.fcard__hint--active               { background: var(--accent); color: white; }
+.fcard__hint--mid.fcard__hint--active { background: rgba(60,60,60,0.82); color: white; }
 
 .fcard__feedback {
   position: absolute;

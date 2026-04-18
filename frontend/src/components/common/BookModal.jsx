@@ -20,6 +20,12 @@ export default function BookModal({ book, onClose, onRequireAuth, wishlistHook, 
   const [preorderMsg, setPreorderMsg]         = useState(null);
 
   useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  useEffect(() => {
     window.history.pushState({ modal: true, bookId: book.book_id }, "", `#book-${book.book_id}`);
     const handlePopState = () => { onClose(); };
     window.addEventListener("popstate", handlePopState);

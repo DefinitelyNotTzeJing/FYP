@@ -9,6 +9,7 @@ const SWIPE_PX    = 50;
 const MOVE_CANCEL = 14;
 
 function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
+  const cardRef       = useRef(null);
   const phaseRef      = useRef("idle");
   const [phase,    setPhase]    = useState("idle");
   const [progress, setProgress] = useState(0);
@@ -53,6 +54,16 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
     }, GRACE_MS);
   }
 
+  function getZone(y) {
+    const el = cardRef.current;
+    if (!el) return "mid";
+    const { top, height } = el.getBoundingClientRect();
+    const rel = y - top;
+    if (rel < height / 3) return "up";
+    if (rel > (height * 2) / 3) return "down";
+    return "mid";
+  }
+
   function onMove(x, y) {
     if (phaseRef.current === "grace") {
       const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
@@ -60,23 +71,23 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
     } else if (phaseRef.current === "holding") {
       const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
       if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL) cancelHold(true);
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      setSwipeDir(dy < -10 ? "up" : dy > 10 ? "down" : null);
+    } else if (phaseRef.current === "armed") {
+      setSwipeDir(getZone(y));
     }
   }
 
   function onRelease(x, y) {
     if (phaseRef.current === "grace") {
       cancelHold(false);
+      blockClick.current = true;
       onBookClick?.(book);
     } else if (phaseRef.current === "holding") {
       cancelHold(true);
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      if (dy < -SWIPE_PX)     doAction("cart");
-      else if (dy > SWIPE_PX) doAction("wishlist");
-      else                    cancelHold(true);
+    } else if (phaseRef.current === "armed") {
+      const zone = getZone(y);
+      if (zone === "up")        doAction("cart");
+      else if (zone === "down") doAction("wishlist");
+      else                      cancelHold(true);
     }
   }
 
@@ -109,6 +120,13 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
     onBookClick?.(book);
   };
 
+  useEffect(() => {
+    if (phase !== "armed") return;
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener("touchmove", prevent, { passive: false });
+    return () => document.removeEventListener("touchmove", prevent);
+  }, [phase]);
+
   useEffect(() => () => {
     if (rafId.current) cancelAnimationFrame(rafId.current);
     if (graceTimer.current) clearTimeout(graceTimer.current);
@@ -120,6 +138,7 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
 
   return (
     <div
+      ref={cardRef}
       className={["fcard", isHolding && "fcard--holding", isArmed && "fcard--armed"].filter(Boolean).join(" ")}
       onClick={handleClick}
       onMouseDown={onMouseDown}
@@ -144,8 +163,9 @@ function FCard({ book, onBookClick, onAddToCart, onAddToWishlist }) {
 
         {isArmed && (
           <div className="fcard__hints">
-            <div className={`fcard__hint${swipeDir === "up" ? " fcard__hint--active" : ""}`}>↑ Cart</div>
-            <div className={`fcard__hint${swipeDir === "down" ? " fcard__hint--active" : ""}`}>Wishlist ↓</div>
+            <div className={`fcard__hint fcard__hint--up${swipeDir === "up" ? " fcard__hint--active" : ""}`}>↑ Cart</div>
+            <div className={`fcard__hint fcard__hint--mid${swipeDir === "mid" ? " fcard__hint--active" : ""}`}>✕ Cancel</div>
+            <div className={`fcard__hint fcard__hint--down${swipeDir === "down" ? " fcard__hint--active" : ""}`}>Wishlist ↓</div>
           </div>
         )}
 

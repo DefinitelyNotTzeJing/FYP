@@ -16,6 +16,7 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
 
   // ── Gesture state ──────────────────────────────────────────────────────────
   const heroSwipe     = useRef(null);
+  const coverRef      = useRef(null);
   const phaseRef      = useRef("idle");
   const [phase,    setPhase]    = useState("idle");
   const [progress, setProgress] = useState(0);
@@ -56,6 +57,13 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
     return () => clearInterval(t);
   }, [next, books.length]);
 
+  useEffect(() => {
+    if (phase !== "armed") return;
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener("touchmove", prevent, { passive: false });
+    return () => document.removeEventListener("touchmove", prevent);
+  }, [phase]);
+
   useEffect(() => () => {
     if (rafId.current) cancelAnimationFrame(rafId.current);
     if (graceTimer.current) clearTimeout(graceTimer.current);
@@ -90,6 +98,16 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
     }, GRACE_MS);
   }
 
+  function getZone(y) {
+    const el = coverRef.current;
+    if (!el) return "mid";
+    const { top, height } = el.getBoundingClientRect();
+    const rel = y - top;
+    if (rel < height / 3) return "up";
+    if (rel > (height * 2) / 3) return "down";
+    return "mid";
+  }
+
   function onMove(x, y) {
     if (phaseRef.current === "grace") {
       const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
@@ -97,23 +115,23 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
     } else if (phaseRef.current === "holding") {
       const dx = x - holdPos.current.x, dy = y - holdPos.current.y;
       if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL) cancelHold(true);
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      setSwipeDir(dy < -10 ? "up" : dy > 10 ? "down" : null);
+    } else if (phaseRef.current === "armed") {
+      setSwipeDir(getZone(y));
     }
   }
 
   function onRelease(x, y) {
     if (phaseRef.current === "grace") {
       cancelHold(false);
+      blockClick.current = true;
       onBookClick?.(book);
     } else if (phaseRef.current === "holding") {
       cancelHold(true);
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      if (dy < -SWIPE_PX)     doAction("cart");
-      else if (dy > SWIPE_PX) doAction("wishlist");
-      else                    cancelHold(true);
+    } else if (phaseRef.current === "armed") {
+      const zone = getZone(y);
+      if (zone === "up")        doAction("cart");
+      else if (zone === "down") doAction("wishlist");
+      else                      cancelHold(true);
     }
   }
 
@@ -207,11 +225,14 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
           onContextMenu={(e) => e.preventDefault()}
           style={{ userSelect: "none", WebkitUserSelect: "none", touchAction: "none" }}
         >
-          <div className={[
-            "hero__cover",
-            isHolding  && "hero__cover--holding",
-            isArmed    && "hero__cover--armed",
-          ].filter(Boolean).join(" ")}>
+          <div
+            ref={coverRef}
+            className={[
+              "hero__cover",
+              isHolding  && "hero__cover--holding",
+              isArmed    && "hero__cover--armed",
+            ].filter(Boolean).join(" ")}
+          >
             {book.cover_image_url
               ? <img src={book.cover_image_url} alt={book.book_name} draggable="false" style={{ pointerEvents: "none" }} />
               : <div className="hero__cover-placeholder">{book.book_name}</div>}
@@ -222,12 +243,9 @@ export default function FeaturedHero({ books, onBookClick, onAddToCart, onAddToW
 
             {isArmed && (
               <div className="hero__hints">
-                <div className={`hero__hint${swipeDir === "up" ? " hero__hint--active" : ""}`}>
-                  ↑ Cart
-                </div>
-                <div className={`hero__hint${swipeDir === "down" ? " hero__hint--active" : ""}`}>
-                  Wishlist ↓
-                </div>
+                <div className={`hero__hint hero__hint--up${swipeDir === "up" ? " hero__hint--active" : ""}`}>↑ Cart</div>
+                <div className={`hero__hint hero__hint--mid${swipeDir === "mid" ? " hero__hint--active" : ""}`}>✕ Cancel</div>
+                <div className={`hero__hint hero__hint--down${swipeDir === "down" ? " hero__hint--active" : ""}`}>Wishlist ↓</div>
               </div>
             )}
 

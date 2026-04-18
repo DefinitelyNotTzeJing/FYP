@@ -71,6 +71,16 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     }, GRACE_MS);
   }
 
+  function getZone(y) {
+    const el = cardRef.current;
+    if (!el) return "mid";
+    const { top, height } = el.getBoundingClientRect();
+    const rel = y - top;
+    if (rel < height / 3) return "up";
+    if (rel > (height * 2) / 3) return "down";
+    return "mid";
+  }
+
   function onMove(x, y) {
     if (phaseRef.current === "grace") {
       const dx = x - holdPos.current.x;
@@ -80,24 +90,23 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
       const dx = x - holdPos.current.x;
       const dy = y - holdPos.current.y;
       if (Math.sqrt(dx * dx + dy * dy) > MOVE_CANCEL) cancelHold(true);
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      setSwipeDir(dy < -10 ? "up" : dy > 10 ? "down" : null);
+    } else if (phaseRef.current === "armed") {
+      setSwipeDir(getZone(y));
     }
   }
 
   function onRelease(x, y) {
     if (phaseRef.current === "grace") {
-      // released before fill started — treat as tap
       cancelHold(false);
+      blockClick.current = true;
       onClick?.(book);
     } else if (phaseRef.current === "holding") {
-      cancelHold(true); // held long enough that releasing is not a tap
-    } else if (phaseRef.current === "armed" && armedPos.current) {
-      const dy = y - armedPos.current.y;
-      if (dy < -SWIPE_PX)     doAction("cart");
-      else if (dy > SWIPE_PX) doAction("wishlist");
-      else                    cancelHold(true);
+      cancelHold(true);
+    } else if (phaseRef.current === "armed") {
+      const zone = getZone(y);
+      if (zone === "up")   doAction("cart");
+      else if (zone === "down") doAction("wishlist");
+      else                 cancelHold(true);
     }
   }
 
@@ -160,6 +169,13 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
     return () => obs.disconnect();
   }, [index]);
 
+  useEffect(() => {
+    if (phase !== "armed") return;
+    const prevent = (e) => e.preventDefault();
+    document.addEventListener("touchmove", prevent, { passive: false });
+    return () => document.removeEventListener("touchmove", prevent);
+  }, [phase]);
+
   useEffect(() => () => {
     if (rafId.current) cancelAnimationFrame(rafId.current);
     if (graceTimer.current) clearTimeout(graceTimer.current);
@@ -218,14 +234,9 @@ export default function BookCard({ book, onClick, onAddToCart, onAddToWishlist, 
 
         {isArmed && (
           <div className="book-card__hints">
-            <div className={`book-card__hint book-card__hint--up${swipeDir === "up" ? " book-card__hint--active" : ""}`}>
-              <span className="book-card__hint-arrow">↑</span>
-              <span>Cart</span>
-            </div>
-            <div className={`book-card__hint book-card__hint--down${swipeDir === "down" ? " book-card__hint--active" : ""}`}>
-              <span>Wishlist</span>
-              <span className="book-card__hint-arrow">↓</span>
-            </div>
+            <div className={`book-card__hint book-card__hint--up${swipeDir === "up" ? " book-card__hint--active" : ""}`}>↑ Cart</div>
+            <div className={`book-card__hint book-card__hint--mid${swipeDir === "mid" ? " book-card__hint--active" : ""}`}>✕ Cancel</div>
+            <div className={`book-card__hint book-card__hint--down${swipeDir === "down" ? " book-card__hint--active" : ""}`}>Wishlist ↓</div>
           </div>
         )}
 
