@@ -1,75 +1,87 @@
 import api from './AxiosConfig';
+import { normalizeBook, normalizePaginatedResponse } from '../utils/normalizers';
+
+function normalizeBookQuery(params = {}) {
+  const normalized = { ...params };
+
+  if (normalized.limit !== undefined && normalized.per_page === undefined) {
+    normalized.per_page = normalized.limit;
+    delete normalized.limit;
+  }
+
+  if (normalized.sort && normalized.sort_by === undefined) {
+    switch (normalized.sort) {
+      case 'newest':
+        normalized.sort_by = 'created_at';
+        normalized.sort_order = 'desc';
+        break;
+      case 'oldest':
+        normalized.sort_by = 'created_at';
+        normalized.sort_order = 'asc';
+        break;
+      case 'price-low':
+        normalized.sort_by = 'price';
+        normalized.sort_order = 'asc';
+        break;
+      case 'price-high':
+        normalized.sort_by = 'price';
+        normalized.sort_order = 'desc';
+        break;
+      case 'title':
+        normalized.sort_by = 'book_name';
+        normalized.sort_order = 'asc';
+        break;
+      default:
+        break;
+    }
+
+    delete normalized.sort;
+  }
+
+  return normalized;
+}
 
 export const bookService = {
-  // Get all books with optional filters
-  getBooks: async (params = {}) => {
-    try {
-      const response = await api.get('/books', { params });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async getBooks(params = {}) {
+    const response = await api.get('/books', { params: normalizeBookQuery(params) });
+    return normalizePaginatedResponse(response.data, normalizeBook);
   },
 
-  // Get single book by ID
-  getBook: async (id) => {
-    try {
-      const response = await api.get(`/books/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async getBook(id) {
+    const response = await api.get(`/books/${id}`);
+    return normalizeBook(response.data);
   },
 
-  // Search books
-  searchBooks: async (query) => {
-    try {
-      const response = await api.get('/books/search', { 
-        params: { q: query } 
-      });
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async searchBooks(query) {
+    const response = await api.get('/books/search', {
+      params: { query },
+    });
+    return normalizePaginatedResponse(response.data, normalizeBook);
   },
 
-  // Get books by category
-  getBooksByCategory: async (category) => {
-    try {
-      const response = await api.get(`/books/category/${category}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async getBooksByCategory(category) {
+    const response = await api.get(`/books/category/${category}`);
+    return normalizePaginatedResponse(response.data, normalizeBook);
   },
 
-  // Admin: Create book
-  createBook: async (bookData) => {
-    try {
-      const response = await api.post('/books', bookData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async createBook(bookData) {
+    const response = await api.post('/books', bookData);
+    return {
+      ...response.data,
+      book: response.data.book ? normalizeBook(response.data.book) : null,
+    };
   },
 
-  // Admin: Update book
-  updateBook: async (id, bookData) => {
-    try {
-      const response = await api.put(`/books/${id}`, bookData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+  async updateBook(id, bookData) {
+    const response = await api.put(`/books/${id}`, bookData);
+    return {
+      ...response.data,
+      book: response.data.book ? normalizeBook(response.data.book) : null,
+    };
   },
 
-  // Admin: Delete book
-  deleteBook: async (id) => {
-    try {
-      const response = await api.delete(`/books/${id}`);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
-  }
+  async deleteBook(id) {
+    const response = await api.delete(`/books/${id}`);
+    return response.data;
+  },
 };
