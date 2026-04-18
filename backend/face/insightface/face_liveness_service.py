@@ -252,33 +252,52 @@ def check_pose():
     """
     Real-time pose check during capture.
     Expects: { frame: base64 }
-    Returns: { yaw, pitch, has_pose }
+    Returns: { yaw, pitch, has_pose, face_detected, bbox, det_score }
     """
     data = request.get_json()
     frame_b64 = data.get('frame')
     if not frame_b64:
-        return jsonify({'has_pose': False}), 400
+        return jsonify({'has_pose': False, 'face_detected': False}), 400
 
     frame = decode_frame(frame_b64)
     if frame is None:
-        return jsonify({'has_pose': False})
+        return jsonify({'has_pose': False, 'face_detected': False})
 
     faces = face_app.get(frame)
     face = get_largest_face(faces)
     if face is None:
-        return jsonify({'has_pose': False, 'message': 'No face detected'})
+        return jsonify({'has_pose': False, 'face_detected': False, 'message': 'No face detected'})
+
+    h, w = frame.shape[:2]
+    box  = face.bbox.astype(int)
+    bbox = {
+        'x': round(float(box[0]) / w, 4),
+        'y': round(float(box[1]) / h, 4),
+        'w': round(float(box[2] - box[0]) / w, 4),
+        'h': round(float(box[3] - box[1]) / h, 4),
+    }
+    det_score = round(float(face.det_score), 3) if hasattr(face, 'det_score') and face.det_score is not None else None
 
     if hasattr(face, 'pose') and face.pose is not None:
         yaw   = float(face.pose[0])
         pitch = float(face.pose[1])
         return jsonify({
-            'has_pose': True,
-            'yaw': round(yaw, 2),
-            'pitch': round(pitch, 2),
-            'message': f'Yaw={yaw:.1f}°'
+            'has_pose':     True,
+            'face_detected': True,
+            'yaw':          round(yaw, 2),
+            'pitch':        round(pitch, 2),
+            'bbox':         bbox,
+            'det_score':    det_score,
+            'message':      f'Yaw={yaw:.1f}°',
         })
 
-    return jsonify({'has_pose': False, 'message': 'No pose data'})
+    return jsonify({
+        'has_pose':     False,
+        'face_detected': True,
+        'bbox':         bbox,
+        'det_score':    det_score,
+        'message':      'No pose data',
+    })
 
 
 if __name__ == '__main__':

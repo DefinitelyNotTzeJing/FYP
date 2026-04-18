@@ -325,8 +325,10 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
   const [poseMsg, setPoseMsg]             = useState("");
   const [camReady, setCamReady]           = useState(false);
   const [error, setError]                 = useState(null);
+  const [liveStatus, setLiveStatus]       = useState({ faceDetected: false, detScore: null, yaw: null });
 
   const videoRef     = useRef(null);
+  const canvasRef    = useRef(null);
   const streamRef    = useRef(null);
   const framesRef    = useRef([]);
   const timerRef     = useRef(null);
@@ -360,6 +362,13 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
   }, [step]);
 
   useEffect(() => {
+    if (camReady && canvasRef.current && videoRef.current) {
+      canvasRef.current.width  = videoRef.current.videoWidth  || 640;
+      canvasRef.current.height = videoRef.current.videoHeight || 480;
+    }
+  }, [camReady]);
+
+  useEffect(() => {
     if (step !== "challenge") return;
     setCountdown(3);
     const id = setInterval(() => {
@@ -371,6 +380,39 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
   useEffect(() => {
     if (step === "challenge" && countdown === 0 && camReady) startCapturing();
   }, [countdown, camReady, step]); // eslint-disable-line
+
+  function drawFaceBox(bbox) {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (!bbox) return;
+
+    const x = bbox.x * canvas.width;
+    const y = bbox.y * canvas.height;
+    const w = bbox.w * canvas.width;
+    const h = bbox.h * canvas.height;
+    const cLen = Math.min(w, h) * 0.22;
+
+    ctx.strokeStyle = "#00e676";
+    ctx.lineWidth = 3;
+    ctx.lineCap = "square";
+
+    // top-left
+    ctx.beginPath(); ctx.moveTo(x, y + cLen); ctx.lineTo(x, y); ctx.lineTo(x + cLen, y); ctx.stroke();
+    // top-right
+    ctx.beginPath(); ctx.moveTo(x + w - cLen, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + cLen); ctx.stroke();
+    // bottom-left
+    ctx.beginPath(); ctx.moveTo(x, y + h - cLen); ctx.lineTo(x, y + h); ctx.lineTo(x + cLen, y + h); ctx.stroke();
+    // bottom-right
+    ctx.beginPath(); ctx.moveTo(x + w - cLen, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - cLen); ctx.stroke();
+
+    // centre dot
+    ctx.fillStyle = "#00e676";
+    ctx.beginPath();
+    ctx.arc(x + w / 2, y + h / 2, 3, 0, Math.PI * 2);
+    ctx.fill();
+  }
 
   function captureFrame() {
     if (!videoRef.current) return null;
@@ -409,6 +451,21 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
             body: JSON.stringify({ frame }),
           });
           const data = await res.json();
+
+          // support both new (face_detected + bbox) and old (has_pose only) API responses
+          const detected = data.face_detected ?? data.has_pose ?? false;
+          if (detected) {
+            if (data.bbox) drawFaceBox(data.bbox);
+            setLiveStatus({
+              faceDetected: true,
+              detScore: data.det_score ?? null,
+              yaw: data.yaw ?? null,
+            });
+          } else {
+            drawFaceBox(null);
+            setLiveStatus({ faceDetected: false, detScore: null, yaw: null });
+          }
+
           const c = challengeRef.current;
           if (data.has_pose && (c?.type === "turn_left" || c?.type === "turn_right")) {
             yawHistory.push(data.yaw);
@@ -438,6 +495,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 
   async function submitFaceVerify(frames, currentChallenge) {
     streamRef.current?.getTracks().forEach((t) => t.stop());
+    drawFaceBox(null);
     if (frames.length < 5) {
       setError("Not enough frames captured. Please try again.");
       return;
@@ -462,6 +520,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
       setStep("challenge");
       framesRef.current = [];
       setProgress(0);
+      setLiveStatus({ faceDetected: false, detScore: null, yaw: null });
     }
   }
 
@@ -486,10 +545,13 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
       </h2>
 
       {step === "verifying" ? (
-        <div style={{ textAlign: "center", padding: "3rem 0", color: "var(--muted)" }}>
-          <Loader2 size={40} strokeWidth={1.5} style={{ marginBottom: "1rem", animation: "spin 1s linear infinite" }} />
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>Verifying your identity…</div>
-          <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+        <div>
+          <div style={{ textAlign: "center", padding: "2.5rem 0 1.5rem", color: "var(--muted)" }}>
+            <Loader2 size={40} strokeWidth={1.5} style={{ marginBottom: "1rem", animation: "spin 1s linear infinite" }} />
+            <div style={{ fontFamily: "var(--font-display)", fontSize: "1rem" }}>Verifying your identity…</div>
+            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+          </div>
+          <FaceStatusPanel status={liveStatus} phase="verifying" />
         </div>
       ) : (
         <>
@@ -521,7 +583,17 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
               autoPlay
               muted
               playsInline
-              style={{ width: "100%", borderRadius: "10px", aspectRatio: "4/3", objectFit: "cover", background: "#000", transform: "scaleX(-1)" }}
+              style={{ width: "100%", borderRadius: "10px", aspectRatio: "4/3", objectFit: "cover", background: "#000", transform: "scaleX(-1)", display: "block" }}
+            />
+            <canvas
+              ref={canvasRef}
+              style={{
+                position: "absolute", inset: 0,
+                width: "100%", height: "100%",
+                transform: "scaleX(-1)",
+                pointerEvents: "none",
+                borderRadius: "10px",
+              }}
             />
             {countdown > 0 && (
               <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.55)", borderRadius: "10px" }}>
@@ -536,6 +608,8 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
             </div>
           )}
 
+          {isCapturing && <FaceStatusPanel status={liveStatus} phase="capturing" />}
+
           {error && (
             <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.65rem 0.9rem", fontSize: "0.83rem", color: "#c0392b", marginTop: "0.75rem" }}>
               {error}
@@ -543,6 +617,76 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
           )}
         </>
       )}
+    </div>
+  );
+}
+
+function FaceStatusPanel({ status, phase }) {
+  const rows = [
+    {
+      label: "FACE DETECTED",
+      value: status.faceDetected ? "YES" : "NO",
+      ok: status.faceDetected,
+    },
+    {
+      label: "CONFIDENCE",
+      value: status.detScore != null ? `${(status.detScore * 100).toFixed(0)}%` : "—",
+      ok: status.detScore != null && status.detScore >= 0.7,
+      neutral: status.detScore == null,
+    },
+    {
+      label: "HEAD ROTATION",
+      value: status.yaw != null ? `${status.yaw.toFixed(1)}°` : "—",
+      ok: true,
+      neutral: status.yaw == null,
+    },
+    {
+      label: "STATUS",
+      value: phase === "verifying" ? "VERIFYING..." : status.faceDetected ? "SCANNING" : "SEARCHING",
+      ok: phase === "verifying" || status.faceDetected,
+    },
+  ];
+
+  return (
+    <div style={{
+      background: "#0d1117",
+      border: "1px solid #21262d",
+      borderRadius: "8px",
+      padding: "0.75rem 1rem",
+      marginTop: "0.75rem",
+      fontFamily: "'DM Mono', 'Courier New', monospace",
+      fontSize: "0.72rem",
+    }}>
+      <div style={{ color: "#58a6ff", fontWeight: 700, marginBottom: "0.55rem", letterSpacing: "0.08em" }}>
+        ◈ SYSTEM STATUS
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.45rem 1.5rem" }}>
+        {rows.map(({ label, value, ok, neutral }) => (
+          <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ color: "#8b949e", letterSpacing: "0.04em" }}>{label}</span>
+            <span style={{
+              color: neutral ? "#8b949e" : ok ? "#3fb950" : "#f85149",
+              fontWeight: 700,
+              letterSpacing: "0.03em",
+            }}>
+              {neutral ? (
+                value
+              ) : (
+                <>
+                  <span style={{
+                    display: "inline-block", width: 6, height: 6,
+                    borderRadius: "50%",
+                    background: ok ? "#3fb950" : "#f85149",
+                    marginRight: 5, verticalAlign: "middle",
+                    boxShadow: ok ? "0 0 5px #3fb950" : "0 0 5px #f85149",
+                  }} />
+                  {value}
+                </>
+              )}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
