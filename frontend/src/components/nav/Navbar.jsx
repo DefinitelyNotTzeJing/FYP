@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { Search, User, Heart, Package, ShoppingCart, Star, LogOut, ChevronUp, ChevronDown, Clock, Settings } from "lucide-react";
+import { Search, User, Heart, Package, ShoppingCart, Star, LogOut, ChevronUp, ChevronDown, Clock, Settings, Sun, Moon } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../hooks/useTheme";
 import "../../styles/Navbar.css";
 
 export default function Navbar({
@@ -15,6 +16,7 @@ export default function Navbar({
   profileImage = null,
 }) {
   const { user, logout } = useAuth();
+  const { dark, toggle: toggleTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef();
 
@@ -114,6 +116,16 @@ export default function Navbar({
                       </button>
                     </>
                   )}
+
+                  <div className="navbar__dropdown-divider" />
+
+                  <button className="navbar__dropdown-item navbar__dropdown-item--theme" onClick={toggleTheme}>
+                    {dark ? <Sun size={14} /> : <Moon size={14} />}
+                    {dark ? "Light Mode" : "Dark Mode"}
+                    <span className="navbar__theme-switch" aria-hidden="true">
+                      <span className={`navbar__theme-knob${dark ? " navbar__theme-knob--on" : ""}`} />
+                    </span>
+                  </button>
 
                   <div className="navbar__dropdown-divider" />
 

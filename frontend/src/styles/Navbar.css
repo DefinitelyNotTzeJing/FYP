@@ -285,6 +285,36 @@
 .navbar__dropdown-item--danger:hover { background: #fef2f2; }
 .navbar__dropdown-item--admin { color: #b45309; font-weight: 600; }
 .navbar__dropdown-item--admin:hover { background: #fffbeb; }
+.navbar__dropdown-item--theme { color: var(--ink); }
+.navbar__dropdown-item--theme:hover { background: var(--paper-dark); }
+
+.navbar__theme-switch {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  width: 32px;
+  height: 18px;
+  border-radius: 9px;
+  background: var(--border);
+  flex-shrink: 0;
+  position: relative;
+  transition: background 0.2s;
+}
+.navbar__dropdown-item--theme:hover .navbar__theme-switch { background: var(--muted); }
+.navbar__theme-knob {
+  position: absolute;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  transition: left 0.2s, background 0.2s;
+}
+.navbar__theme-knob--on {
+  left: 16px;
+  background: var(--accent);
+}
 
 .navbar__dropdown-divider {
   height: 1px;

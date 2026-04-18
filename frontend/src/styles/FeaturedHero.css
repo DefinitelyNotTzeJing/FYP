@@ -159,20 +159,20 @@
   width: 38px;
   height: 38px;
   border-radius: var(--radius-pill);
-  background: rgba(255,255,255,0.9);
-  border: 1px solid var(--border);
-  color: var(--ink);
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.15);
+  color: #1a1a18;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   z-index: 2;
   backdrop-filter: blur(4px);
 }
 
-.hero__arrow:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+.hero__arrow:hover { background: #4f4f4f; color: #ffffff; border-color: #1a1a18; }
 .hero__arrow--left  { left: 1rem; }
 .hero__arrow--right { right: 1rem; }
 

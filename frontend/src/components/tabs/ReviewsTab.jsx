@@ -129,7 +129,7 @@ export default function ReviewsTab({ reviews, loading, onRefresh }) {
                       onChange={(e) => setEditForm({ ...editForm, comment: e.target.value })}
                       rows={3}
                       placeholder="Write your review…"
-                      style={{ width: "100%", padding: "0.6rem 0.75rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", resize: "vertical", boxSizing: "border-box" }}
+                      style={{ width: "100%", padding: "0.6rem 0.75rem", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", resize: "vertical", boxSizing: "border-box", background: "var(--paper)", color: "var(--ink)" }}
                     />
                     <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.6rem" }}>
                       <button

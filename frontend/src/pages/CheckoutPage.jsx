@@ -27,7 +27,7 @@ function Steps({ current }) {
             <div style={{
               width: 32, height: 32, borderRadius: "50%",
               background: i < current ? "var(--accent)" : i === current ? "var(--ink)" : "var(--border)",
-              color: i <= current ? "white" : "var(--muted)",
+              color: i <= current ? "var(--paper)" : "var(--muted)",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: "0.8rem", fontWeight: 700,
               transition: "all 0.3s",
@@ -117,7 +117,7 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
                   fontFamily: "var(--font-body)", fontSize: "0.8rem", fontWeight: 500,
                   border: `1.5px solid ${addressMode === mode ? "var(--ink)" : "var(--border)"}`,
                   background: addressMode === mode ? "var(--ink)" : "var(--white)",
-                  color: addressMode === mode ? "white" : "var(--muted)",
+                  color: addressMode === mode ? "var(--paper)" : "var(--muted)",
                   transition: "all 0.2s",
                 }}
               >
@@ -181,7 +181,7 @@ function SummaryStep({ items, profile, paymentMethod, setPaymentMethod, shipping
       <button
         onClick={onProceed}
         disabled={!shippingAddress.trim()}
-        style={{ width: "100%", padding: "0.85rem", background: "var(--ink)", color: "white", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, cursor: shippingAddress.trim() ? "pointer" : "not-allowed", opacity: shippingAddress.trim() ? 1 : 0.5 }}
+        style={{ width: "100%", padding: "0.85rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, cursor: shippingAddress.trim() ? "pointer" : "not-allowed", opacity: shippingAddress.trim() ? 1 : 0.5 }}
       >
         Continue to Verification →
       </button>
@@ -307,7 +307,7 @@ function PasswordVerifyStep({ paymentMethod, shippingAddress, notes, token, onSu
       <button
         onClick={handleSubmit}
         disabled={!password || loading}
-        style={{ width: "100%", padding: "0.85rem", background: "var(--ink)", color: "white", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, cursor: password && !loading ? "pointer" : "not-allowed", opacity: password && !loading ? 1 : 0.5 }}
+        style={{ width: "100%", padding: "0.85rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "1rem", fontWeight: 600, cursor: password && !loading ? "pointer" : "not-allowed", opacity: password && !loading ? 1 : 0.5 }}
       >
         {loading ? "Placing Order…" : "Confirm & Place Order"}
       </button>
@@ -469,7 +469,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
     return (
       <div>
         <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#c0392b", marginBottom: "1.25rem" }}>{error}</div>
-        <button onClick={() => { setError(null); setStep("challenge"); }} style={{ width: "100%", padding: "0.75rem", background: "var(--ink)", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-body)" }}>Try Again</button>
+        <button onClick={() => { setError(null); setStep("challenge"); }} style={{ width: "100%", padding: "0.75rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-body)" }}>Try Again</button>
       </div>
     );
   }
@@ -495,8 +495,8 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
         <>
           {challenge && (
             <div style={{
-              background: challengeDone ? "#f0fdf4" : "var(--paper)",
-              border: `1.5px solid ${challengeDone ? "#86efac" : "var(--border)"}`,
+              background: challengeDone ? "var(--success-bg)" : "var(--paper)",
+              border: `1.5px solid ${challengeDone ? "var(--success-border)" : "var(--border)"}`,
               borderRadius: "10px", padding: "0.85rem 1.1rem", marginBottom: "1rem",
               textAlign: "center", transition: "all 0.3s",
             }}>
@@ -508,7 +508,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
                 {isCapturing && challengeDone && "Hold still until the bar fills"}
               </div>
               {isCapturing && poseMsg && (
-                <div style={{ fontSize: "0.78rem", marginTop: "0.3rem", color: challengeDone ? "#16a34a" : "var(--accent)", fontWeight: 500 }}>
+                <div style={{ fontSize: "0.78rem", marginTop: "0.3rem", color: challengeDone ? "var(--success-text)" : "var(--accent)", fontWeight: 500 }}>
                   {poseMsg}
                 </div>
               )}
@@ -532,7 +532,7 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
 
           {isCapturing && (
             <div style={{ height: 4, background: "var(--border)", borderRadius: 2, marginTop: "0.75rem", overflow: "hidden" }}>
-              <div style={{ height: "100%", width: `${progress}%`, background: challengeDone ? "#16a34a" : "var(--accent)", borderRadius: 2, transition: "width 0.2s linear" }} />
+              <div style={{ height: "100%", width: `${progress}%`, background: challengeDone ? "var(--success-text)" : "var(--accent)", borderRadius: 2, transition: "width 0.2s linear" }} />
             </div>
           )}
 
@@ -556,7 +556,7 @@ function SuccessStep({ order, pricing, onDone }) {
 
   return (
     <div style={{ textAlign: "center", padding: "1rem 0 2rem" }}>
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", animation: "pop 0.4s ease", color: "#16a34a" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1rem", animation: "pop 0.4s ease", color: "var(--success-text)" }}>
         <CheckCircle2 size={64} strokeWidth={1.5} />
       </div>
       <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.4rem", fontWeight: 700, marginBottom: "0.5rem" }}>Order Placed!</h2>
@@ -592,7 +592,7 @@ function SuccessStep({ order, pricing, onDone }) {
       )}
       <button
         onClick={onDone}
-        style={{ padding: "0.8rem 2.5rem", background: "var(--ink)", color: "white", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer" }}
+        style={{ padding: "0.8rem 2.5rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "10px", fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 600, cursor: "pointer" }}
       >
         View My Orders
       </button>
