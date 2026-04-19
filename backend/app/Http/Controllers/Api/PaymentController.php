@@ -142,10 +142,8 @@ class PaymentController extends Controller
         }
 
         try {
-            // Decode stored embedding
-            $storedEmbedding = is_string($user->face_embedding)
-                ? json_decode($user->face_embedding, true)
-                : $user->face_embedding;
+            // Model cast decrypts and returns the array directly
+            $storedEmbedding = $user->face_embedding;
 
             // Call Flask face service with liveness detection
             $response = Http::timeout(30)->post('http://localhost:5000/verify', [

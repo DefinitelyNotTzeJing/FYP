@@ -75,8 +75,8 @@ class FaceRecognitionController extends Controller
 
             $data = $response->json();
 
-            // Store the 512-float embedding array as JSON in the database
-            $user->face_embedding      = json_encode($data['embedding']);
+            // Store the 512-float embedding array (model cast encrypts it)
+            $user->face_embedding      = $data['embedding'];
             $user->face_registered_at  = now();
             $user->save();
 
@@ -133,8 +133,8 @@ class FaceRecognitionController extends Controller
                 ], 400);
             }
 
-            // Decode stored embedding back to array for Python
-            $storedEmbedding = json_decode($user->face_embedding, true);
+            // Model cast decrypts and returns the array directly
+            $storedEmbedding = $user->face_embedding;
 
             \Log::info('[VerifyFace] Calling Python API...', [
                 'user_id'        => $user->user_id,
