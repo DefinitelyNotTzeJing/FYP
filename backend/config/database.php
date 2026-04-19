@@ -2,6 +2,13 @@
 
 use Illuminate\Support\Str;
 
+// PDO::MYSQL_ATTR_SSL_CA is deprecated in PHP 8.5; use the new namespaced constant when available.
+if (!defined('PDO::MYSQL_ATTR_SSL_CA') && class_exists('Pdo\Mysql')) {
+    define('PDO_MYSQL_ATTR_SSL_CA', Pdo\Mysql::ATTR_SSL_CA);
+} else {
+    define('PDO_MYSQL_ATTR_SSL_CA', PDO::MYSQL_ATTR_SSL_CA);
+}
+
 return [
 
     /*
@@ -59,7 +66,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO_MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
@@ -79,7 +86,7 @@ return [
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
-                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+                PDO_MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],
 
