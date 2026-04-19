@@ -53,3 +53,11 @@ Startup order:
 6. netlify
     its live 24/7, upload the build folder from frontend/build to update to the latest changes
         npm run build
+
+Testing
+1. Laravel
+    cd backend
+    php artisan test
+2. insightface
+    cd backend/face/insightface
+    C:\Python\Python_3.14.3\python.exe -m pytest tests/test_face_service.py -v
