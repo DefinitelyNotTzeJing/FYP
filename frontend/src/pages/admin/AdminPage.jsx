@@ -570,6 +570,236 @@ function CategoriesTab({ token }) {
   );
 }
 
+// ── Admin Order Detail Modal ───────────────────────────────────────────────
+function AdminOrderDetailModal({ order, token, onClose, onStatusChange }) {
+  const [detail, setDetail]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus]   = useState(order.status);
+  const [saving, setSaving]   = useState(false);
+  const [msg, setMsg]         = useState(null);
+
+  const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
+  const statusColor = {
+    pending:    { bg: "#fef9c3", color: "#854d0e", border: "#fde047" },
+    processing: { bg: "#dbeafe", color: "#1e40af", border: "#93c5fd" },
+    shipped:    { bg: "#ede9fe", color: "#5b21b6", border: "#c4b5fd" },
+    delivered:  { bg: "#dcfce7", color: "#166534", border: "#86efac" },
+    cancelled:  { bg: "#fee2e2", color: "#991b1b", border: "#fca5a5" },
+  };
+
+  useEffect(() => {
+    apiFetch(`/admin/orders/${order.order_id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((d) => { setDetail(d.data || d); setLoading(false); })
+      .catch(() => { setDetail(order); setLoading(false); });
+  }, [order.order_id, token]); // eslint-disable-line
+
+  async function handleStatusChange(newStatus) {
+    setSaving(true);
+    setMsg(null);
+    try {
+      await apiFetch(`/admin/orders/${order.order_id}/status`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      setStatus(newStatus);
+      setDetail((prev) => prev ? { ...prev, status: newStatus } : prev);
+      setMsg({ ok: true, text: `Status updated to "${newStatus}".` });
+      onStatusChange?.();
+    } catch {
+      setMsg({ ok: false, text: "Failed to update status." });
+    }
+    setSaving(false);
+    setTimeout(() => setMsg(null), 2500);
+  }
+
+  const o = detail || order;
+  const sc = statusColor[status] || statusColor.pending;
+  const itemsSubtotal = o.items?.reduce((s, i) => s + parseFloat(i.total || 0), 0) || 0;
+  const total = parseFloat(o.total_amount || 0);
+  const hasTaxShipping = total > itemsSubtotal + 0.01;
+  const shipping = hasTaxShipping ? 5.00 : 0;
+  const tax = hasTaxShipping ? parseFloat((total - itemsSubtotal - 5).toFixed(2)) : 0;
+
+  return (
+    <div
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+      style={{
+        position: "fixed", inset: 0, zIndex: 1000,
+        background: "rgba(0,0,0,0.45)", backdropFilter: "blur(3px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div style={{
+        background: "var(--white)", borderRadius: "14px",
+        width: "100%", maxWidth: 600,
+        maxHeight: "90vh", overflowY: "auto",
+        boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+        animation: "adminModalIn 0.2s ease",
+      }}>
+        {/* Header */}
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "flex-start",
+          padding: "1.25rem 1.5rem 1rem",
+          borderBottom: "1px solid var(--border)",
+        }}>
+          <div>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.05rem" }}>
+              {o.order_number}
+            </div>
+            <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "0.2rem" }}>
+              {o.created_at ? new Date(o.created_at).toLocaleDateString("en-MY", {
+                day: "numeric", month: "long", year: "numeric",
+              }) : ""}
+              {o.user && (
+                <span style={{ marginLeft: "0.6rem" }}>
+                  · <strong style={{ color: "var(--ink)" }}>{o.user.username || o.user.name}</strong>
+                  <span style={{ color: "var(--muted)" }}> (ID: {o.user.user_id || o.user_id})</span>
+                </span>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <span style={{
+              padding: "0.3rem 0.75rem", borderRadius: "20px", fontSize: "0.75rem",
+              fontWeight: 600, border: `1px solid ${sc.border}`,
+              background: sc.bg, color: sc.color, textTransform: "capitalize",
+            }}>
+              {status}
+            </span>
+            <button
+              onClick={onClose}
+              style={{ background: "none", border: "none", fontSize: "1.1rem", cursor: "pointer", color: "var(--muted)", lineHeight: 1 }}
+            >✕</button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted)" }}>Loading…</div>
+        ) : (
+          <div style={{ padding: "1.25rem 1.5rem" }}>
+
+            {/* Items */}
+            <div style={{ fontSize: "0.73rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem" }}>
+              Items ({o.items?.length || 0})
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", marginBottom: "1.25rem" }}>
+              {o.items?.map((item) => {
+                const book = item.book || {};
+                return (
+                  <div key={item.order_item_id || item.book_id} style={{
+                    display: "grid", gridTemplateColumns: "48px 1fr auto",
+                    gap: "0.75rem", alignItems: "center",
+                    padding: "0.75rem 1rem",
+                    border: "1px solid var(--border)", borderRadius: "10px",
+                  }}>
+                    <div style={{
+                      width: 48, height: 64, borderRadius: "4px", overflow: "hidden",
+                      background: "var(--paper-dark)", display: "flex",
+                      alignItems: "center", justifyContent: "center",
+                      fontSize: "0.6rem", color: "var(--muted)", flexShrink: 0,
+                    }}>
+                      {book.cover_image_url
+                        ? <img src={book.cover_image_url} alt={book.book_name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : <span>{book.book_name?.slice(0, 2)}</span>
+                      }
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: "0.88rem" }}>{book.book_name || "—"}</div>
+                      {book.author?.name && (
+                        <div style={{ fontSize: "0.74rem", color: "var(--muted)", marginTop: "0.1rem" }}>{book.author.name}</div>
+                      )}
+                      <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: "0.2rem" }}>
+                        Qty: {item.quantity} × RM {parseFloat(item.price).toFixed(2)}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: "0.9rem", color: "var(--accent)", whiteSpace: "nowrap" }}>
+                      RM {parseFloat(item.total).toFixed(2)}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Order details */}
+            <div style={{ fontSize: "0.73rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.75rem" }}>
+              Details
+            </div>
+            <div style={{ background: "var(--paper)", borderRadius: "10px", padding: "1rem 1.1rem", marginBottom: "1rem" }}>
+              {[
+                ["Customer",  o.user?.username || o.user?.name || `User #${o.user_id}`],
+                ["Payment",   o.payment_method],
+                ["Paid",      o.payment_status],
+                ["Shipping",  o.shipping_address],
+                ["Verified",  o.verified_by_face ? "Face Recognition" : "Password"],
+              ].map(([label, val]) => val && (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", fontSize: "0.84rem", marginBottom: "0.45rem", gap: "1rem" }}>
+                  <span style={{ color: "var(--muted)", flexShrink: 0 }}>{label}</span>
+                  <span style={{ fontWeight: 500, textAlign: "right", textTransform: label === "Paid" ? "capitalize" : "none" }}>{val}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Pricing */}
+            <div style={{ background: "var(--paper)", borderRadius: "10px", padding: "1rem 1.1rem", marginBottom: "1.25rem" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.84rem", color: "var(--muted)", marginBottom: "0.4rem" }}>
+                <span>Subtotal</span><span>RM {itemsSubtotal.toFixed(2)}</span>
+              </div>
+              {hasTaxShipping && (<>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.84rem", color: "var(--muted)", marginBottom: "0.4rem" }}>
+                  <span>Shipping</span><span>RM {shipping.toFixed(2)}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.84rem", color: "var(--muted)", marginBottom: "0.4rem" }}>
+                  <span>Tax (6%)</span><span>RM {tax.toFixed(2)}</span>
+                </div>
+              </>)}
+              <div style={{ height: 1, background: "var(--border)", margin: "0.6rem 0" }} />
+              <div style={{ display: "flex", justifyContent: "space-between", fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem" }}>
+                <span>Total</span>
+                <span style={{ color: "var(--accent)" }}>RM {total.toFixed(2)}</span>
+              </div>
+            </div>
+
+            {/* Status changer */}
+            <div style={{ fontSize: "0.73rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "0.6rem" }}>
+              Update Status
+            </div>
+            <Msg msg={msg} />
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              {ORDER_STATUSES.map((s) => {
+                const c = statusColor[s];
+                const active = status === s;
+                return (
+                  <button
+                    key={s}
+                    disabled={saving}
+                    onClick={() => !active && handleStatusChange(s)}
+                    style={{
+                      padding: "0.4rem 1rem", borderRadius: "20px", fontSize: "0.8rem", fontWeight: 600,
+                      border: `2px solid ${active ? c.color : "var(--border)"}`,
+                      background: active ? c.bg : "none",
+                      color: active ? c.color : "var(--muted)",
+                      cursor: active || saving ? "default" : "pointer",
+                      opacity: saving ? 0.6 : 1,
+                      transition: "all 0.15s",
+                    }}
+                  >
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+      <style>{`@keyframes adminModalIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }`}</style>
+    </div>
+  );
+}
+
 // ── Admin Orders Tab ───────────────────────────────────────────────────────
 function AdminOrdersTab({ token }) {
   const [orders, setOrders]   = useState([]);
@@ -578,6 +808,7 @@ function AdminOrdersTab({ token }) {
   const [search, setSearch]   = useState("");
   const [msg, setMsg]         = useState(null);
   const [updating, setUpdating] = useState(null);
+  const [selected, setSelected] = useState(null);
 
   const ORDER_STATUSES = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
@@ -627,6 +858,15 @@ function AdminOrdersTab({ token }) {
 
   return (
     <div>
+      {selected && (
+        <AdminOrderDetailModal
+          order={selected}
+          token={token}
+          onClose={() => setSelected(null)}
+          onStatusChange={load}
+        />
+      )}
+
       {/* Summary chips */}
       <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginBottom: "1.25rem" }}>
         {ORDER_STATUSES.map((s) => (
@@ -675,7 +915,9 @@ function AdminOrdersTab({ token }) {
             ) : orders.length === 0 ? (
               <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>No orders found.</td></tr>
             ) : orders.map((o) => (
-              <tr key={o.order_id} style={{ transition: "background 0.1s" }}
+              <tr key={o.order_id}
+                onClick={() => setSelected(o)}
+                style={{ transition: "background 0.1s", cursor: "pointer" }}
                 onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper)"}
                 onMouseLeave={(e) => e.currentTarget.style.background = ""}
               >
@@ -705,7 +947,7 @@ function AdminOrdersTab({ token }) {
                 <td style={{ ...S.td, whiteSpace: "nowrap" }}>
                   {new Date(o.created_at).toLocaleDateString("en-MY", { day: "numeric", month: "short", year: "numeric" })}
                 </td>
-                <td style={S.td}>
+                <td style={S.td} onClick={(e) => e.stopPropagation()}>
                   <select
                     value={o.status}
                     disabled={updating === o.order_id}

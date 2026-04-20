@@ -170,6 +170,21 @@ class OrderController extends Controller
         }
     }
 
+    public function showAdmin(Request $request, $id)
+    {
+        try {
+            $order = Order::with(['items.book.author', 'user'])
+                ->findOrFail($id);
+
+            return response()->json(['data' => $order]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'error' => 'Order not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => 'Failed to retrieve order'], 500);
+        }
+    }
+
     public function updateStatus(Request $request, $id)
     {
         try {

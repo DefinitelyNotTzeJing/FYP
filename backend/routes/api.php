@@ -122,6 +122,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Orders management
         Route::get('/admin/orders', [OrderController::class, 'getAllOrders']);
+        Route::get('/admin/orders/{id}', [OrderController::class, 'showAdmin']);
         Route::put('/admin/orders/{id}/status', [OrderController::class, 'updateStatus']);
 
         // Pre-orders management
