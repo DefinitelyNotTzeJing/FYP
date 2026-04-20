@@ -8,10 +8,11 @@ class AuthorFactory extends Factory
 {
     public function definition(): array
     {
+        $name = fake()->name();
         return [
-            'name' => fake()->name(),
-            'bio' => fake()->paragraph(3),
-            'image_url' => fake()->imageUrl(150, 150, 'people'),
+            'name'      => $name,
+            'bio'       => fake()->paragraph(3),
+            'image_url' => 'https://ui-avatars.com/api/?name=' . urlencode($name) . '&size=200&background=random&color=fff&bold=true',
         ];
     }
 }
