@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\PasswordResetController;
 use App\Http\Controllers\Api\AuthorController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\PreorderController;
+use App\Http\Controllers\Api\AdminUserController;
 
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -128,5 +129,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Pre-orders management
         Route::get('/admin/preorders', [PreorderController::class, 'getAll']);
         Route::put('/admin/preorders/{id}/status', [PreorderController::class, 'updateStatus']);
+
+        // Users management
+        Route::get('/admin/users', [AdminUserController::class, 'index']);
+        Route::get('/admin/users/{id}', [AdminUserController::class, 'show']);
     });
 });

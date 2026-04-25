@@ -1067,6 +1067,174 @@ function AdminPreordersTab({ token }) {
   );
 }
 
+// ── USERS TAB ──────────────────────────────────────────────────────────────
+function UserDetailModal({ userId, token, onClose }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    apiFetch(`/admin/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((d) => { setUser(d.data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [userId, token]);
+
+  const field = (label, value) => (
+    <div style={{ marginBottom: "0.75rem" }}>
+      <div style={{ fontSize: "0.7rem", fontWeight: 700, color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.15rem" }}>{label}</div>
+      <div style={{ fontSize: "0.9rem", color: "var(--ink)" }}>{value ?? <span style={{ color: "var(--muted)" }}>—</span>}</div>
+    </div>
+  );
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 2000, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center" }} onClick={onClose}>
+      <div style={{ background: "var(--white)", borderRadius: "14px", padding: "2rem", maxWidth: 520, width: "100%", margin: "1rem", boxShadow: "0 8px 40px rgba(0,0,0,0.18)", maxHeight: "90vh", overflowY: "auto" }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1.1rem" }}>User Details</div>
+          <button onClick={onClose} style={{ background: "none", border: "none", fontSize: "1.3rem", cursor: "pointer", color: "var(--muted)", lineHeight: 1 }}>×</button>
+        </div>
+
+        {loading && <div style={{ color: "var(--muted)", fontSize: "0.88rem" }}>Loading…</div>}
+        {!loading && !user && <div style={{ color: "#dc2626", fontSize: "0.88rem" }}>Failed to load user.</div>}
+        {!loading && user && (
+          <>
+            {/* Account section */}
+            <div style={{ fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", marginBottom: "0.75rem", paddingBottom: "0.4rem", borderBottom: "1px solid var(--border)" }}>Account</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 1.5rem", marginBottom: "1.25rem" }}>
+              {field("User ID", `#${user.user_id}`)}
+              {field("Username", user.username)}
+              {field("Email", user.email)}
+              {field("Role", user.is_admin ? "Admin" : "Customer")}
+              {field("Face Login", user.face_registered ? `Registered${user.face_registered_at ? " · " + new Date(user.face_registered_at).toLocaleDateString("en-MY") : ""}` : "Not registered")}
+              {field("Total Orders", user.orders_count)}
+              {field("Joined", new Date(user.created_at).toLocaleDateString("en-MY", { year: "numeric", month: "short", day: "numeric" }))}
+            </div>
+
+            {/* Profile section */}
+            <div style={{ fontWeight: 700, fontSize: "0.78rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted)", marginBottom: "0.75rem", paddingBottom: "0.4rem", borderBottom: "1px solid var(--border)" }}>Profile</div>
+            {user.profile ? (
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0 1.5rem" }}>
+                {field("Phone", user.profile.phone)}
+                {field("Gender", user.profile.gender === "M" ? "Male" : user.profile.gender === "F" ? "Female" : user.profile.gender)}
+                {field("Date of Birth", user.profile.date_of_birth ? new Date(user.profile.date_of_birth).toLocaleDateString("en-MY") : null)}
+                {field("Age", user.profile.age != null ? `${user.profile.age} yrs` : null)}
+                {field("Payment Method", user.profile.payment_method)}
+                {field("Address", user.profile.address)}
+              </div>
+            ) : (
+              <div style={{ fontSize: "0.85rem", color: "var(--muted)" }}>No profile data available.</div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function UsersTab({ token }) {
+  const [users, setUsers]         = useState([]);
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState("");
+  const [page, setPage]           = useState(1);
+  const [pagination, setPagination] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
+  const debounceRef = useRef(null);
+
+  const load = useCallback((p = 1, q = "") => {
+    setLoading(true);
+    const params = new URLSearchParams({ page: p });
+    if (q) params.set("search", q);
+    apiFetch(`/admin/users?${params}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then((d) => { setUsers(d.data || []); setPagination(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [token]);
+
+  useEffect(() => { load(1); }, [load]);
+
+  function handleSearch(v) {
+    setSearch(v);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => { setPage(1); load(1, v); }, 350);
+  }
+
+  function goPage(p) { setPage(p); load(p, search); }
+
+  const badge = (label, color, bg) => (
+    <span style={{ fontSize: "0.72rem", fontWeight: 700, padding: "0.18rem 0.55rem", borderRadius: "20px", color, background: bg }}>{label}</span>
+  );
+
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.1rem", flexWrap: "wrap", gap: "0.75rem" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "1rem" }}>
+          Users {pagination && <span style={{ fontWeight: 400, fontSize: "0.82rem", color: "var(--muted)" }}>({pagination.total})</span>}
+        </div>
+        <SearchBar value={search} onChange={handleSearch} placeholder="Search by username or email…" />
+      </div>
+
+      <div style={S.card}>
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              {["#", "Username", "Email", "Role", "Face Login", "Orders", "Joined", ""].map((h) => (
+                <th key={h} style={S.th}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {loading && (
+              <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>Loading…</td></tr>
+            )}
+            {!loading && users.length === 0 && (
+              <tr><td colSpan={8} style={{ ...S.td, textAlign: "center", color: "var(--muted)" }}>No users found.</td></tr>
+            )}
+            {!loading && users.map((u) => (
+              <tr key={u.user_id} style={{ cursor: "pointer" }} onClick={() => setSelectedId(u.user_id)}
+                onMouseEnter={(e) => e.currentTarget.style.background = "var(--paper)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "transparent"}>
+                <td style={S.td}><span style={{ fontSize: "0.78rem", color: "var(--muted)" }}>#{u.user_id}</span></td>
+                <td style={{ ...S.td, fontWeight: 600 }}>{u.username}</td>
+                <td style={{ ...S.td, color: "var(--muted)" }}>{u.email}</td>
+                <td style={S.td}>
+                  {u.is_admin
+                    ? badge("Admin", "#7c3aed", "#f5f3ff")
+                    : badge("Customer", "#1d4ed8", "#eff6ff")}
+                </td>
+                <td style={S.td}>
+                  {u.face_registered
+                    ? badge("Registered", "#166534", "#f0fdf4")
+                    : badge("None", "#6b7280", "#f9fafb")}
+                </td>
+                <td style={{ ...S.td, textAlign: "center" }}>{u.orders_count}</td>
+                <td style={{ ...S.td, color: "var(--muted)", fontSize: "0.82rem" }}>{new Date(u.created_at).toLocaleDateString("en-MY")}</td>
+                <td style={S.td}>
+                  <button style={{ ...S.btnSec, fontSize: "0.75rem", padding: "0.28rem 0.65rem" }}
+                    onClick={(e) => { e.stopPropagation(); setSelectedId(u.user_id); }}>
+                    View
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {pagination && pagination.last_page > 1 && (
+        <div style={{ display: "flex", gap: "0.4rem", justifyContent: "center", marginTop: "1.25rem", flexWrap: "wrap" }}>
+          {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((p) => (
+            <button key={p} onClick={() => goPage(p)}
+              style={{ ...S.btnSec, padding: "0.35rem 0.75rem", fontWeight: p === page ? 700 : 400, background: p === page ? "var(--ink)" : "none", color: p === page ? "var(--paper)" : "var(--ink)", borderColor: p === page ? "var(--ink)" : "var(--border)" }}>
+              {p}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedId && <UserDetailModal userId={selectedId} token={token} onClose={() => setSelectedId(null)} />}
+    </div>
+  );
+}
+
 // ── Main AdminPage ─────────────────────────────────────────────────────────
 export default function AdminPage({
   onNavigateHome, onNavigateToAuth, onNavigateToProfile,
@@ -1113,7 +1281,7 @@ export default function AdminPage({
         </div>
 
         <div style={S.tabs}>
-          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"], ["preorders", "🔔 Pre-orders"], ["orders", "🧾 Orders"]].map(([key, label]) => (
+          {[["books", "📚 Books"], ["authors", "✍️ Authors"], ["categories", "🏷️ Categories"], ["preorders", "🔔 Pre-orders"], ["orders", "🧾 Orders"], ["users", "👥 Users"]].map(([key, label]) => (
             <button key={key} style={S.tab(tab === key)} onClick={() => setTab(key)}>{label}</button>
           ))}
         </div>
@@ -1123,6 +1291,7 @@ export default function AdminPage({
         {tab === "categories" && <CategoriesTab        token={token} />}
         {tab === "orders"     && <AdminOrdersTab       token={token} />}
         {tab === "preorders"  && <AdminPreordersTab    token={token} />}
+        {tab === "users"      && <UsersTab             token={token} />}
       </div>
     </>
   );
