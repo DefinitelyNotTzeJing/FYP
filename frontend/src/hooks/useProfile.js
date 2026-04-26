@@ -53,12 +53,17 @@ export function useWishlist(token) {
   useEffect(() => { fetch_(); }, [fetch_]);
 
   async function add(bookId) {
-    await apiFetch("/wishlist", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ book_id: bookId }),
-    });
-    fetch_();
+    try {
+      await apiFetch("/wishlist", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ book_id: bookId }),
+      });
+      fetch_();
+    } catch (e) {
+      if (e?.response?.error === "Book already in wishlist") return;
+      throw e;
+    }
   }
 
   async function remove(bookId) {

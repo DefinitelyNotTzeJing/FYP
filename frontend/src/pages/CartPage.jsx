@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/nav/Navbar";
 import { useCart, useProfile } from "../hooks/useProfile";
@@ -7,6 +8,9 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
   const { items, loading, remove, update, clear, totalQty } = useCart(token);
   const { profile } = useProfile(token);
   const profileImage = profile?.profile?.profile_image_base64 || null;
+
+  const [confirmRemoveId, setConfirmRemoveId] = useState(null);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const total = items.reduce((sum, i) => {
     return sum + parseFloat(i.book?.price || 0) * (i.quantity || 1);
@@ -80,7 +84,7 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.5rem" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                         <button
-                          onClick={() => item.quantity > 1 ? update(book.book_id, item.quantity - 1) : remove(book.book_id)}
+                          onClick={() => item.quantity > 1 ? update(book.book_id, item.quantity - 1) : setConfirmRemoveId(book.book_id)}
                           style={{ width: 28, height: 28, border: "1.5px solid var(--border)", borderRadius: "6px", background: "none", cursor: "pointer", fontSize: "0.9rem" }}
                         >−</button>
                         <span style={{ minWidth: 20, textAlign: "center", fontSize: "0.9rem", fontWeight: 500 }}>{item.quantity}</span>
@@ -90,9 +94,23 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                           style={{ width: 28, height: 28, border: "1.5px solid var(--border)", borderRadius: "6px", background: "none", cursor: atMax ? "not-allowed" : "pointer", fontSize: "0.9rem", opacity: atMax ? 0.4 : 1 }}
                         >+</button>
                       </div>
-                      <button onClick={() => remove(book.book_id)} style={{ background: "none", border: "none", fontSize: "0.78rem", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>
-                        Remove
-                      </button>
+                      {confirmRemoveId === book.book_id ? (
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                          <span style={{ fontSize: "0.78rem", color: "var(--ink)" }}>Remove?</span>
+                          <button
+                            onClick={() => { remove(book.book_id); setConfirmRemoveId(null); }}
+                            style={{ padding: "0.15rem 0.55rem", fontSize: "0.75rem", background: "#c0392b", color: "white", border: "none", borderRadius: "5px", cursor: "pointer" }}
+                          >Yes</button>
+                          <button
+                            onClick={() => setConfirmRemoveId(null)}
+                            style={{ padding: "0.15rem 0.55rem", fontSize: "0.75rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted)" }}
+                          >No</button>
+                        </div>
+                      ) : (
+                        <button onClick={() => setConfirmRemoveId(book.book_id)} style={{ background: "none", border: "none", fontSize: "0.78rem", color: "var(--muted)", cursor: "pointer", textDecoration: "underline" }}>
+                          Remove
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -112,9 +130,23 @@ export default function CartPage({ onNavigateHome, onNavigateToAuth, onNavigateT
                 <button onClick={onNavigateToCheckout} style={{ flex: 1, padding: "0.75rem", background: "var(--accent)", color: "white", border: "none", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.95rem", fontWeight: 500, cursor: "pointer" }}>
                   Checkout
                 </button>
-                <button onClick={clear} style={{ padding: "0.75rem 1rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", cursor: "pointer", color: "var(--muted)" }}>
-                  Clear
-                </button>
+                {confirmClear ? (
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <span style={{ fontSize: "0.85rem", color: "var(--ink)" }}>Clear all?</span>
+                    <button
+                      onClick={() => { clear(); setConfirmClear(false); }}
+                      style={{ padding: "0.55rem 0.85rem", fontSize: "0.85rem", background: "#c0392b", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-body)" }}
+                    >Yes</button>
+                    <button
+                      onClick={() => setConfirmClear(false)}
+                      style={{ padding: "0.55rem 0.85rem", fontSize: "0.85rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", cursor: "pointer", color: "var(--muted)", fontFamily: "var(--font-body)" }}
+                    >No</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmClear(true)} style={{ padding: "0.75rem 1rem", background: "none", border: "1.5px solid var(--border)", borderRadius: "8px", fontFamily: "var(--font-body)", fontSize: "0.88rem", cursor: "pointer", color: "var(--muted)" }}>
+                    Clear
+                  </button>
+                )}
               </div>
             </div>
           </>
