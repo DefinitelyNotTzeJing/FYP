@@ -17,8 +17,13 @@ function StepEmail({ onNext }) {
         body: JSON.stringify({ email }),
       });
       onNext(email);
-    } catch {
-      setError("No account found with that email address.");
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 422 || e?.response?.errors?.email) {
+        setError("No account found with that email address.");
+      } else {
+        setError("Failed to send OTP. Please try again later.");
+      }
     } finally {
       setLoading(false);
     }
