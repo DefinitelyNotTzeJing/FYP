@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { MapPin, Pencil, KeyRound, Camera, ArrowLeft, Check, Loader2, CheckCircle2, ArrowLeftRight } from "lucide-react";
+import { MapPin, Pencil, KeyRound, Camera, ArrowLeft, Check, Loader2, CheckCircle2, ArrowLeftRight, XCircle } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { apiFetch } from "../utils/api";
 import { useCart, useProfile } from "../hooks/useProfile";
@@ -326,6 +326,9 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
   const [camReady, setCamReady]           = useState(false);
   const [error, setError]                 = useState(null);
   const [liveStatus, setLiveStatus]       = useState({ faceDetected: false, detScore: null, yaw: null });
+  const [failError, setFailError]         = useState(null);
+  const [retryCountdown, setRetryCountdown] = useState(3);
+  const [failCount, setFailCount]         = useState(0);
 
   const videoRef     = useRef(null);
   const canvasRef    = useRef(null);
@@ -380,6 +383,36 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
   useEffect(() => {
     if (step === "challenge" && countdown === 0 && camReady) startCapturing();
   }, [countdown, camReady, step]); // eslint-disable-line
+
+  // Decrement retry countdown while in failed state (only for first 2 failures)
+  useEffect(() => {
+    if (step !== "failed" || failCount >= 3) return;
+    setRetryCountdown(3);
+    const id = setInterval(() => setRetryCountdown((c) => c - 1), 1000);
+    return () => clearInterval(id);
+  }, [step, failCount]); // eslint-disable-line
+
+  // Auto-restart camera when countdown hits 0 (only for first 2 failures)
+  useEffect(() => {
+    if (step === "failed" && failCount < 3 && retryCountdown <= 0) doRetry();
+  }, [retryCountdown, step, failCount]); // eslint-disable-line
+
+  function doRetry() {
+    setFailError(null);
+    setError(null);
+    setRetryCountdown(3);
+    capturingRef.current = false;
+    framesRef.current = [];
+    setProgress(0);
+    setCamReady(false);
+    setChallengeDone(false);
+    setPoseMsg("");
+    setLiveStatus({ faceDetected: false, detScore: null, yaw: null });
+    const c = CHALLENGES[Math.floor(Math.random() * CHALLENGES.length)];
+    challengeRef.current = c;
+    setChallenge(c);
+    setStep("challenge");
+  }
 
   function drawFaceBox(bbox) {
     const canvas = canvasRef.current;
@@ -497,7 +530,11 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
     streamRef.current?.getTracks().forEach((t) => t.stop());
     drawFaceBox(null);
     if (frames.length < 5) {
-      setError("Not enough frames captured. Please try again.");
+      setFailError("Not enough frames captured. Please try again.");
+      framesRef.current = [];
+      setProgress(0);
+      setLiveStatus({ faceDetected: false, detScore: null, yaw: null });
+      setStep("failed");
       return;
     }
     setStep("verifying");
@@ -516,19 +553,75 @@ function FaceVerifyStep({ paymentMethod, shippingAddress, notes, token, onSucces
       onSuccess(data.data?.order);
     } catch (e) {
       const msg = e?.response?.message || e?.response?.error || "Face verification failed. Please try again.";
-      setError(msg);
-      setStep("challenge");
+      setFailError(msg);
       framesRef.current = [];
       setProgress(0);
       setLiveStatus({ faceDetected: false, detScore: null, yaw: null });
+      setFailCount((n) => n + 1);
+      setStep("failed");
     }
   }
 
-  if (error && step !== "challenge") {
+  // ── Failed state ───────────────────────────────────────────────────────────
+  if (step === "failed") {
     return (
       <div>
-        <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "8px", padding: "0.75rem 1rem", fontSize: "0.85rem", color: "#c0392b", marginBottom: "1.25rem" }}>{error}</div>
-        <button onClick={() => { setError(null); setStep("challenge"); }} style={{ width: "100%", padding: "0.75rem", background: "var(--ink)", color: "var(--paper)", border: "none", borderRadius: "8px", cursor: "pointer", fontFamily: "var(--font-body)" }}>Try Again</button>
+        <button
+          onClick={onBack}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted)", fontSize: "0.85rem", marginBottom: "1.25rem", padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.35rem", minHeight: 44 }}
+        >
+          <ArrowLeft size={15} /> Back
+        </button>
+
+        <div style={{ textAlign: "center", padding: "1.5rem 0 2rem" }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+            <XCircle size={64} strokeWidth={1.5} style={{ color: "#e53e3e", animation: "failPop 0.4s ease" }} />
+          </div>
+
+          <h2 style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", fontWeight: 700, color: "#c0392b", marginBottom: "0.5rem" }}>
+            Verification Failed
+          </h2>
+
+          <p style={{ fontSize: "0.87rem", color: "var(--muted)", marginBottom: "1.5rem", lineHeight: 1.5 }}>
+            {failError || "Face verification failed. Please try again."}
+          </p>
+
+          {failCount < 3 ? (
+            <div style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              background: "#fef2f2", border: "1px solid #fecaca",
+              borderRadius: "20px", padding: "0.4rem 1rem",
+              fontSize: "0.83rem", color: "#c0392b", marginBottom: "1.75rem",
+            }}>
+              <Loader2 size={13} style={{ animation: "spin 1s linear infinite", flexShrink: 0 }} />
+              Retrying automatically in {retryCountdown > 0 ? retryCountdown : 0}s…
+            </div>
+          ) : (
+            <p style={{ fontSize: "0.83rem", color: "#c0392b", marginBottom: "1.75rem", fontWeight: 500 }}>
+              3 attempts failed. Please click "Try Again" to continue.
+            </p>
+          )}
+
+          <div>
+            <button
+              onClick={() => { setFailCount(0); doRetry(); }}
+              style={{
+                width: "100%", padding: "0.85rem",
+                background: "var(--ink)", color: "var(--paper)",
+                border: "none", borderRadius: "10px",
+                fontFamily: "var(--font-display)", fontSize: "0.95rem", fontWeight: 600,
+                cursor: "pointer",
+              }}
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes failPop { 0%{transform:scale(0)} 70%{transform:scale(1.2)} 100%{transform:scale(1)} }
+          @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+        `}</style>
       </div>
     );
   }
