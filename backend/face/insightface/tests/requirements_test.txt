@@ -1,0 +1,4 @@
+# Test dependencies — install on top of the service's requirements.txt
+matplotlib>=3.5
+requests>=2.28
+numpy>=1.21

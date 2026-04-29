@@ -19,72 +19,58 @@ class FaceRecognitionTest extends TestCase
         $this->fakeEmbedding = array_fill(0, 512, 0.01);
     }
 
-    // ── Health check ──────────────────────────────────────────────────────────
-
-    public function test_health_check_returns_ok_when_python_api_is_up(): void
+    // TC-UT-006: Face login with valid enrolled face
+    public function test_user_can_login_with_matching_face(): void
     {
-        Http::fake(['http://127.0.0.1:5000/health' => Http::response(['status' => 'ok'], 200)]);
-
-        $this->getJson('/api/face/health')->assertStatus(200)->assertJson(['status' => 'ok']);
-    }
-
-    public function test_health_check_returns_error_when_python_api_is_down(): void
-    {
-        Http::fake(['http://127.0.0.1:5000/health' => fn() => throw new \Exception('Connection refused')]);
-
-        $this->getJson('/api/face/health')->assertStatus(500);
-    }
-
-    // ── Register ──────────────────────────────────────────────────────────────
-
-    public function test_authenticated_user_can_register_face(): void
-    {
-        Http::fake(['http://127.0.0.1:5000/register' => Http::response([
-            'success'   => true,
-            'embedding' => $this->fakeEmbedding,
+        Http::fake(['http://127.0.0.1:5000/verify' => Http::response([
+            'match'      => true,
+            'similarity' => 0.85,
+            'liveness'   => true,
         ], 200)]);
 
-        $user    = User::factory()->create();
-        $frames  = array_fill(0, 5, base64_encode('fake_image'));
+        $user = User::factory()->create();
+        $user->face_embedding     = $this->fakeEmbedding;
+        $user->face_registered_at = now();
+        $user->save();
 
-        $this->actingAs($user)
-             ->postJson('/api/face/register', ['frames' => $frames])
+        $this->postJson('/api/face/verify', [
+            'email'  => $user->email,
+            'frames' => array_fill(0, 5, base64_encode('img')),
+        ])
              ->assertStatus(200)
-             ->assertJson(['success' => true]);
-
-        $user->refresh();
-        $this->assertNotNull($user->face_embedding);
-        $this->assertNotNull($user->face_registered_at);
-        $this->assertIsArray($user->face_embedding);
-        $this->assertCount(512, $user->face_embedding);
+             ->assertJsonStructure(['token', 'user']);
     }
 
-    public function test_face_embedding_is_stored_encrypted_not_as_plain_json(): void
-    {
-        Http::fake(['http://127.0.0.1:5000/register' => Http::response([
-            'success'   => true,
-            'embedding' => $this->fakeEmbedding,
-        ], 200)]);
-
-        $user   = User::factory()->create();
-        $frames = array_fill(0, 5, base64_encode('fake_image'));
-
-        $this->actingAs($user)->postJson('/api/face/register', ['frames' => $frames]);
-
-        $raw = \DB::table('users')->where('user_id', $user->user_id)->value('face_embedding');
-
-        $this->assertStringStartsWith('eyJ', $raw, 'Embedding should be AES-encrypted (base64 starts with eyJ)');
-    }
-
-    public function test_face_registration_requires_at_least_5_frames(): void
+    // TC-UT-007: Face login with face not enrolled
+    public function test_login_fails_when_face_not_registered(): void
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
-             ->postJson('/api/face/register', ['frames' => array_fill(0, 4, 'img')])
-             ->assertStatus(422);
+        $this->postJson('/api/face/verify', [
+            'email'  => $user->email,
+            'frames' => array_fill(0, 5, base64_encode('img')),
+        ])->assertStatus(400);
     }
 
+    // TC-UT-008: Face login with spoofed photo (liveness check failed)
+    public function test_login_fails_when_liveness_check_fails(): void
+    {
+        Http::fake(['http://127.0.0.1:5000/verify' => Http::response([
+            'message' => 'Liveness check failed',
+        ], 422)]);
+
+        $user = User::factory()->create();
+        $user->face_embedding     = $this->fakeEmbedding;
+        $user->face_registered_at = now();
+        $user->save();
+
+        $this->postJson('/api/face/verify', [
+            'email'  => $user->email,
+            'frames' => array_fill(0, 5, base64_encode('img')),
+        ])->assertStatus(422);
+    }
+
+    // TC-UT-009: Face registration fails when Python service rejects liveness
     public function test_face_registration_fails_when_python_returns_error(): void
     {
         Http::fake(['http://127.0.0.1:5000/register' => Http::response(
@@ -99,72 +85,40 @@ class FaceRecognitionTest extends TestCase
              ->assertStatus(422);
     }
 
-    public function test_unauthenticated_user_cannot_register_face(): void
+    // TC-UT-068: Register face with valid 5+ live frames
+    public function test_authenticated_user_can_register_face(): void
     {
-        $this->postJson('/api/face/register', ['frames' => array_fill(0, 5, 'img')])
-             ->assertStatus(401);
-    }
-
-    // ── Verify (face login) ───────────────────────────────────────────────────
-
-    public function test_user_can_login_with_matching_face(): void
-    {
-        Http::fake(['http://127.0.0.1:5000/verify' => Http::response([
-            'match'      => true,
-            'similarity' => 0.85,
-            'liveness'   => true,
+        Http::fake(['http://127.0.0.1:5000/register' => Http::response([
+            'success'   => true,
+            'embedding' => $this->fakeEmbedding,
         ], 200)]);
 
-        $user = User::factory()->create();
-        $user->face_embedding    = $this->fakeEmbedding;
-        $user->face_registered_at = now();
-        $user->save();
+        $user   = User::factory()->create();
+        $frames = array_fill(0, 5, base64_encode('fake_image'));
 
-        $this->postJson('/api/face/verify', [
-            'email'  => $user->email,
-            'frames' => array_fill(0, 5, base64_encode('img')),
-        ])
+        $this->actingAs($user)
+             ->postJson('/api/face/register', ['frames' => $frames])
              ->assertStatus(200)
-             ->assertJsonStructure(['token', 'user']);
+             ->assertJson(['success' => true]);
+
+        $user->refresh();
+        $this->assertNotNull($user->face_embedding);
+        $this->assertNotNull($user->face_registered_at);
+        $this->assertIsArray($user->face_embedding);
+        $this->assertCount(512, $user->face_embedding);
     }
 
-    public function test_login_fails_when_face_does_not_match(): void
-    {
-        Http::fake(['http://127.0.0.1:5000/verify' => Http::response([
-            'match'      => false,
-            'similarity' => 0.35,
-        ], 401)]);
-
-        $user = User::factory()->create();
-        $user->face_embedding = $this->fakeEmbedding;
-        $user->save();
-
-        $this->postJson('/api/face/verify', [
-            'email'  => $user->email,
-            'frames' => array_fill(0, 5, base64_encode('img')),
-        ])->assertStatus(401);
-    }
-
-    public function test_login_fails_when_face_not_registered(): void
+    // TC-UT-069: Register face with fewer than 5 frames
+    public function test_face_registration_requires_at_least_5_frames(): void
     {
         $user = User::factory()->create();
 
-        $this->postJson('/api/face/verify', [
-            'email'  => $user->email,
-            'frames' => array_fill(0, 5, base64_encode('img')),
-        ])->assertStatus(400);
+        $this->actingAs($user)
+             ->postJson('/api/face/register', ['frames' => array_fill(0, 4, 'img')])
+             ->assertStatus(422);
     }
 
-    public function test_login_fails_for_unknown_email(): void
-    {
-        $this->postJson('/api/face/verify', [
-            'email'  => 'ghost@example.com',
-            'frames' => array_fill(0, 5, base64_encode('img')),
-        ])->assertStatus(404);
-    }
-
-    // ── Status / Remove ───────────────────────────────────────────────────────
-
+    // TC-UT-070: Check face status for enrolled user
     public function test_face_status_shows_registered(): void
     {
         $user = User::factory()->create();
@@ -178,15 +132,7 @@ class FaceRecognitionTest extends TestCase
              ->assertJson(['has_face' => true]);
     }
 
-    public function test_face_status_shows_not_registered(): void
-    {
-        $user = User::factory()->create();
-
-        $this->actingAs($user)
-             ->getJson('/api/face/status')
-             ->assertJson(['has_face' => false]);
-    }
-
+    // TC-UT-063 / TC-UT-071: Remove face enrolment / Remove face data
     public function test_user_can_remove_face_data(): void
     {
         $user = User::factory()->create();

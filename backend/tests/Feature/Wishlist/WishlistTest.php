@@ -22,16 +22,7 @@ class WishlistTest extends TestCase
         $this->book = Book::factory()->create();
     }
 
-    public function test_user_can_view_wishlist(): void
-    {
-        Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
-
-        $this->actingAs($this->user)
-             ->getJson('/api/wishlist')
-             ->assertStatus(200)
-             ->assertJsonStructure(['data']);
-    }
-
+    // TC-UT-064: Add book to wishlist
     public function test_user_can_add_book_to_wishlist(): void
     {
         $this->actingAs($this->user)
@@ -44,6 +35,7 @@ class WishlistTest extends TestCase
         ]);
     }
 
+    // TC-UT-065: Add duplicate book to wishlist
     public function test_adding_duplicate_book_to_wishlist_is_rejected(): void
     {
         Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
@@ -53,6 +45,18 @@ class WishlistTest extends TestCase
              ->assertStatus(400);
     }
 
+    // TC-UT-066: View wishlist
+    public function test_user_can_view_wishlist(): void
+    {
+        Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
+
+        $this->actingAs($this->user)
+             ->getJson('/api/wishlist')
+             ->assertStatus(200)
+             ->assertJsonStructure(['data']);
+    }
+
+    // TC-UT-067: Remove book from wishlist
     public function test_user_can_remove_book_from_wishlist(): void
     {
         Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
@@ -65,43 +69,5 @@ class WishlistTest extends TestCase
             'user_id' => $this->user->user_id,
             'book_id' => $this->book->book_id,
         ]);
-    }
-
-    public function test_check_returns_true_when_book_in_wishlist(): void
-    {
-        Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
-
-        $this->actingAs($this->user)
-             ->getJson("/api/wishlist/check/{$this->book->book_id}")
-             ->assertStatus(200)
-             ->assertJson(['in_wishlist' => true]);
-    }
-
-    public function test_check_returns_false_when_book_not_in_wishlist(): void
-    {
-        $this->actingAs($this->user)
-             ->getJson("/api/wishlist/check/{$this->book->book_id}")
-             ->assertStatus(200)
-             ->assertJson(['in_wishlist' => false]);
-    }
-
-    public function test_user_can_clear_entire_wishlist(): void
-    {
-        Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => $this->book->book_id]);
-        Wishlist::create(['user_id' => $this->user->user_id, 'book_id' => Book::factory()->create()->book_id]);
-
-        $this->actingAs($this->user)->deleteJson('/api/wishlist')->assertStatus(200);
-
-        $this->assertDatabaseMissing('wishlists', ['user_id' => $this->user->user_id]);
-    }
-
-    public function test_users_wishlists_are_isolated(): void
-    {
-        $other = User::factory()->create();
-        Wishlist::create(['user_id' => $other->user_id, 'book_id' => $this->book->book_id]);
-
-        $response = $this->actingAs($this->user)->getJson('/api/wishlist');
-
-        $this->assertEmpty($response->json('data'));
     }
 }

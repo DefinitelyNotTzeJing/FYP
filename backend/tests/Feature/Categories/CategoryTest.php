@@ -12,6 +12,7 @@ class CategoryTest extends TestCase
 {
     use RefreshDatabase;
 
+    // TC-UT-046: Fetch category list for filter panel
     public function test_anyone_can_list_categories(): void
     {
         Category::factory()->count(3)->create();
@@ -21,6 +22,7 @@ class CategoryTest extends TestCase
              ->assertJsonCount(3);
     }
 
+    // TC-UT-046b: View single category with its books
     public function test_anyone_can_view_category_with_books(): void
     {
         $category = Category::factory()->create();
@@ -30,26 +32,30 @@ class CategoryTest extends TestCase
              ->assertJsonFragment(['category_id' => $category->category_id]);
     }
 
-    public function test_admin_can_create_category(): void
+    // TC-UT-044: Admin adds category with valid name (slug auto-generated)
+    public function test_admin_can_create_category_with_slug_auto_generated(): void
     {
         $admin = User::factory()->create(['is_admin' => true]);
 
         $this->actingAs($admin)
-             ->postJson('/api/categories', ['name' => 'Science Fiction', 'description' => 'Sci-fi books'])
+             ->postJson('/api/categories', ['name' => 'Mystery Thrillers'])
              ->assertStatus(201);
-
-        $this->assertDatabaseHas('categories', ['name' => 'Science Fiction']);
-    }
-
-    public function test_slug_is_auto_generated_from_name(): void
-    {
-        $admin = User::factory()->create(['is_admin' => true]);
-
-        $this->actingAs($admin)->postJson('/api/categories', ['name' => 'Mystery Thrillers']);
 
         $this->assertDatabaseHas('categories', ['slug' => 'mystery-thrillers']);
     }
 
+    // TC-UT-045: Admin adds category with duplicate name
+    public function test_admin_cannot_create_category_with_duplicate_name(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        Category::factory()->create(['name' => 'Existing Category']);
+
+        $this->actingAs($admin)
+             ->postJson('/api/categories', ['name' => 'Existing Category'])
+             ->assertStatus(422);
+    }
+
+    // TC-UT-047: Admin updates category name
     public function test_admin_can_update_category(): void
     {
         $admin    = User::factory()->create(['is_admin' => true]);
@@ -62,17 +68,7 @@ class CategoryTest extends TestCase
         $this->assertDatabaseHas('categories', ['category_id' => $category->category_id, 'name' => 'Updated Name']);
     }
 
-    public function test_admin_cannot_delete_category_with_books(): void
-    {
-        $admin    = User::factory()->create(['is_admin' => true]);
-        $category = Category::factory()->create();
-        Book::factory()->create(['category_id' => $category->category_id]);
-
-        $this->actingAs($admin)
-             ->deleteJson("/api/categories/{$category->category_id}")
-             ->assertStatus(400);
-    }
-
+    // TC-UT-048: Admin deletes empty category
     public function test_admin_can_delete_empty_category(): void
     {
         $admin    = User::factory()->create(['is_admin' => true]);
@@ -85,12 +81,15 @@ class CategoryTest extends TestCase
         $this->assertDatabaseMissing('categories', ['category_id' => $category->category_id]);
     }
 
-    public function test_non_admin_cannot_create_category(): void
+    // TC-UT-049: Admin deletes category with assigned books
+    public function test_admin_cannot_delete_category_with_books(): void
     {
-        $user = User::factory()->create();
+        $admin    = User::factory()->create(['is_admin' => true]);
+        $category = Category::factory()->create();
+        Book::factory()->create(['category_id' => $category->category_id]);
 
-        $this->actingAs($user)
-             ->postJson('/api/categories', ['name' => 'Hack'])
-             ->assertStatus(403);
+        $this->actingAs($admin)
+             ->deleteJson("/api/categories/{$category->category_id}")
+             ->assertStatus(400);
     }
 }

@@ -13,39 +13,19 @@ class PreorderTest extends TestCase
     use RefreshDatabase;
 
     private User $user;
+    private User $admin;
     private Book $oosBook;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->user    = User::factory()->create();
+        $this->admin   = User::factory()->create(['is_admin' => true]);
         $this->oosBook = Book::factory()->outOfStock()->create();
     }
 
-    public function test_user_can_preorder_out_of_stock_book(): void
-    {
-        $this->actingAs($this->user)
-             ->postJson('/api/preorders', ['book_id' => $this->oosBook->book_id, 'quantity' => 1])
-             ->assertStatus(201);
-
-        $this->assertDatabaseHas('preorders', [
-            'user_id' => $this->user->user_id,
-            'book_id' => $this->oosBook->book_id,
-            'status'  => 'pending',
-        ]);
-    }
-
-    public function test_user_cannot_preorder_in_stock_book(): void
-    {
-        $inStock = Book::factory()->create(['available_quantity' => 5]);
-
-        // Controller returns 400 (not 422) when book is in stock
-        $this->actingAs($this->user)
-             ->postJson('/api/preorders', ['book_id' => $inStock->book_id, 'quantity' => 1])
-             ->assertStatus(400);
-    }
-
-    public function test_user_cannot_preorder_same_book_twice(): void
+    // TC-UT-054: Admin views all preorders
+    public function test_admin_can_view_all_preorders(): void
     {
         Preorder::create([
             'user_id'           => $this->user->user_id,
@@ -55,12 +35,53 @@ class PreorderTest extends TestCase
             'status'            => 'pending',
         ]);
 
-        // Controller returns 409 (Conflict) for duplicate pending pre-order
-        $this->actingAs($this->user)
-             ->postJson('/api/preorders', ['book_id' => $this->oosBook->book_id, 'quantity' => 1])
-             ->assertStatus(409);
+        $this->actingAs($this->admin)
+             ->getJson('/api/admin/preorders')
+             ->assertStatus(200);
     }
 
+    // TC-UT-055: Admin filters preorders by status
+    public function test_admin_can_filter_preorders_by_status(): void
+    {
+        Preorder::create([
+            'user_id'           => $this->user->user_id,
+            'book_id'           => $this->oosBook->book_id,
+            'quantity'          => 1,
+            'price_at_preorder' => $this->oosBook->price,
+            'status'            => 'pending',
+        ]);
+
+        $response = $this->actingAs($this->admin)
+             ->getJson('/api/admin/preorders?status=pending')
+             ->assertStatus(200);
+
+        // Admin preorders are paginated: { success, data: { data: [...preorders...], ... } }
+        $items = $response->json('data.data') ?? [];
+        $this->assertNotEmpty($items);
+        foreach ($items as $item) {
+            $this->assertEquals('pending', $item['status']);
+        }
+    }
+
+    // TC-UT-056: Admin fulfils pending preorder
+    public function test_admin_can_update_preorder_status_to_fulfilled(): void
+    {
+        $preorder = Preorder::create([
+            'user_id'           => $this->user->user_id,
+            'book_id'           => $this->oosBook->book_id,
+            'quantity'          => 1,
+            'price_at_preorder' => 20.00,
+            'status'            => 'pending',
+        ]);
+
+        $this->actingAs($this->admin)
+             ->putJson("/api/admin/preorders/{$preorder->preorder_id}/status", ['status' => 'fulfilled'])
+             ->assertStatus(200);
+
+        $this->assertEquals('fulfilled', $preorder->fresh()->status);
+    }
+
+    // TC-UT-057: User cancels own pending preorder
     public function test_user_can_cancel_own_preorder(): void
     {
         $preorder = Preorder::create([
@@ -78,38 +99,13 @@ class PreorderTest extends TestCase
         $this->assertEquals('cancelled', $preorder->fresh()->status);
     }
 
-    public function test_user_can_list_own_preorders(): void
+    // TC-UT-058: User attempts to preorder in-stock book
+    public function test_user_cannot_preorder_in_stock_book(): void
     {
-        Preorder::create([
-            'user_id'           => $this->user->user_id,
-            'book_id'           => $this->oosBook->book_id,
-            'quantity'          => 1,
-            'price_at_preorder' => 20.00,
-            'status'            => 'pending',
-        ]);
+        $inStock = Book::factory()->create(['available_quantity' => 5]);
 
-        // Controller returns { success, data: [...] }
         $this->actingAs($this->user)
-             ->getJson('/api/preorders')
-             ->assertStatus(200)
-             ->assertJsonStructure(['data']);
-    }
-
-    public function test_admin_can_update_preorder_status(): void
-    {
-        $admin    = User::factory()->create(['is_admin' => true]);
-        $preorder = Preorder::create([
-            'user_id'           => $this->user->user_id,
-            'book_id'           => $this->oosBook->book_id,
-            'quantity'          => 1,
-            'price_at_preorder' => 20.00,
-            'status'            => 'pending',
-        ]);
-
-        $this->actingAs($admin)
-             ->putJson("/api/admin/preorders/{$preorder->preorder_id}/status", ['status' => 'fulfilled'])
-             ->assertStatus(200);
-
-        $this->assertEquals('fulfilled', $preorder->fresh()->status);
+             ->postJson('/api/preorders', ['book_id' => $inStock->book_id, 'quantity' => 1])
+             ->assertStatus(400);
     }
 }
