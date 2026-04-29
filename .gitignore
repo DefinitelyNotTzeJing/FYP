@@ -35,3 +35,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# InsightFace Benchmark Data
+backend/face/insightface/tests/data/lfw-funneled.tgz
