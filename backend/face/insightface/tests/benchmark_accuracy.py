@@ -54,15 +54,16 @@ try:
 except ImportError:
     sys.exit("insightface is not installed. Run: pip install insightface onnxruntime")
 
-_face_app = None
+import threading
+_thread_local = threading.local()
 
 
 def get_face_app():
-    global _face_app
-    if _face_app is None:
-        _face_app = FaceAnalysis(providers=["CPUExecutionProvider"])
-        _face_app.prepare(ctx_id=0, det_size=(320, 320))
-    return _face_app
+    if not hasattr(_thread_local, "face_app"):
+        app = FaceAnalysis(providers=["CPUExecutionProvider"])
+        app.prepare(ctx_id=0, det_size=(320, 320))
+        _thread_local.face_app = app
+    return _thread_local.face_app
 
 
 # ── Core helpers ───────────────────────────────────────────────────────────────
@@ -265,7 +266,7 @@ def compute_roc(genuine_scores, impostor_scores):
 def compute_auc(fpr, tpr):
     """Trapezoidal AUC from raw ROC arrays."""
     sorted_idx = np.argsort(fpr)
-    return float(np.trapz(tpr[sorted_idx], fpr[sorted_idx]))
+    return float(np.trapezoid(tpr[sorted_idx], fpr[sorted_idx]))
 
 
 # ── Plotting ───────────────────────────────────────────────────────────────────

@@ -61,3 +61,19 @@ Testing
 2. insightface
     cd backend/face/insightface
     C:\Python\Python_3.14.3\python.exe -m pytest tests/test_face_service.py -v
+
+InsightFace Benchmark Testing
+    cd backend/face/insightface
+        1. Activate the venv
+            .\venv\Scripts\activate.ps1     (powershell terminal / visual studio code)
+            .\venv\Scripts\activate.bat     (desktop access)
+
+        2. Face recognition accuracy benchmark (requires LFW download above)
+            python tests\benchmark_accuracy.py --limit 200    (quick, ~2-3 min)
+            python tests\benchmark_accuracy.py                (full 6000 pairs, 15-30 min)
+
+        3. Results saved to
+            tests\results\accuracy_report.csv
+            tests\results\score_distribution.png
+            tests\results\roc_curve.png
+            tests\results\stress_test_report.json
