@@ -1,6 +1,6 @@
 <div align="center">
 
-# 📚 BookFace — AI-Powered Bookstore
+# 📚 Folio — AI-Powered Bookstore
 
 **A full-stack e-commerce bookstore with facial recognition authentication & biometric payment verification**
 
@@ -17,7 +17,7 @@
 
 Most bookstores let you pay with a card. This one lets you pay **with your face**.
 
-BookFace integrates deep-learning facial recognition into a full e-commerce flow — register your face once, and use it as a second-factor for login and payment verification. No tokens. No OTP SMS. Just look at the camera.
+Folio integrates deep-learning facial recognition into a full e-commerce flow — register your face once, and use it as a second-factor for login and payment verification. No tokens. No OTP SMS. Just look at the camera.
 
 ---
 
